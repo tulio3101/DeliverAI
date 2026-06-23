@@ -9,13 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class ProductResponseDTO {
+public class OrderItemResponseDTO {
   private Long id;
 
-  private String name;
+  private OrderResponseDTO order;
 
-  private int units;
+  private ProductResponseDTO product;
 
-  private double price;
-
+  private int quantity;
 }
