@@ -12,6 +12,8 @@
 ![JUnit](https://img.shields.io/badge/JUnit-5.11-blue?logo=junit5)
 ![Mockito](https://img.shields.io/badge/Mockito-5.14-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![n8n](https://img.shields.io/badge/n8n-Workflow_Automation-EA4AAA?logo=n8n&logoColor=white)
+![AI Agent](https://img.shields.io/badge/AI_Agent-n8n-8A2BE2?logo=n8n)
 
 </div>
 
@@ -89,29 +91,6 @@ Controller  →  Service  →  Repository  →  Database
      ↕
     DTO
 ```
-
-### Domain Model
-
-```text
-┌───────────┐     ┌───────────┐     ┌──────────────┐
-│  Product  │     │   Order   │     │  OrderItem   │
-├───────────┤     ├───────────┤     ├──────────────┤
-│ id        │     │ id        │     │ id           │
-│ name      │     │ orderDate │     │ order (FK)   │
-│ units     │     │ state     │     │ product (FK) │
-│ price     │     │ subTotal  │     │ quantity     │
-└───────────┘     └───────────┘     └──────────────┘
-```
-
-**State enum** — tracks the order lifecycle:
-
-| State | Description |
-|-------|-------------|
-| `IN_CONFIRMATION` | Awaiting customer confirmation |
-| `PREPARATION` | Being prepared by the business |
-| `COMPLETED` | Finished |
-| *(pending)* | `READY_FOR_PICKUP` — TODO |
-| *(pending)* | `IN_DELIVERY` — TODO |
 
 ### Project Structure
 
