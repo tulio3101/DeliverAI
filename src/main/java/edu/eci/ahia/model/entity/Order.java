@@ -36,7 +36,6 @@ public class Order {
     @NotNull
     private State state;
     
-
     @NotNull
     @Positive
     private double subTotal;

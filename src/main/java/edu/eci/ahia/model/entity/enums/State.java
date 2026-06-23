@@ -9,4 +9,5 @@ public enum State {
     IN_CONFIRMATION,
     PREPARATION,
     COMPLETED,
+    // Agregar dos estados más LISTO PARA RECOGER - EN ENTREGA
 }
