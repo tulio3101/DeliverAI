@@ -1,3 +1,5 @@
+<div align="center">
+
 # 🚀 DeliverAI
 
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
@@ -10,7 +12,8 @@
 ![JUnit](https://img.shields.io/badge/JUnit-5.11-blue?logo=junit5)
 ![Mockito](https://img.shields.io/badge/Mockito-5.14-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Built by](https://img.shields.io/badge/built_by-Equipo_DeliverAI-blue)
+
+</div>
 
 **DeliverAI** is an academic project developed for the course **Hyperautomation Architectures: Design, Implementation and Governance of AI Agents in Business Contexts** at the **Colombian School of Engineering Julio Garavito** (intersemester period 2026-I).
 
@@ -97,8 +100,7 @@ Controller  →  Service  →  Repository  →  Database
 │ name      │     │ orderDate │     │ order (FK)   │
 │ units     │     │ state     │     │ product (FK) │
 │ price     │     │ subTotal  │     │ quantity     │
-└───────────┘     │ items     │     └──────────────┘
-                  └───────────┘
+└───────────┘     └───────────┘     └──────────────┘
 ```
 
 **State enum** — tracks the order lifecycle:
@@ -289,13 +291,11 @@ http://localhost:8080/swagger-ui.html
 
 ## 🙌 Team
 
-| | |
-|---|---|
-| <img src="https://github.com/tulio3101.png?size=40" width="20" alt=""/> | [Tulio Riaño Sánchez](https://github.com/tulio3101) |
-| <img src="https://github.com/JulianLopez11.png?size=40" width="20" alt=""/> | [Julian Camilo Lopez Barrero](https://github.com/JulianLopez11) |
-| <img src="https://github.com/OneCode182.png?size=40" width="20" alt=""/> | [Sergio Andrey Silva Rodriguez](https://github.com/OneCode182) |
-| <img src="https://github.com/AlejandroHenao2572.png?size=40" width="20" alt=""/> | [David Alejandro Patacon Henao](https://github.com/AlejandroHenao2572) |
-| <img src="https://github.com/MAGG0059.png?size=40" width="20" alt=""/> | [Manuel Alejandro Guarnizo](https://github.com/MAGG0059) |
+- [Tulio Riaño Sánchez](https://github.com/tulio3101)
+- [Julian Camilo Lopez Barrero](https://github.com/JulianLopez11)
+- [Sergio Andrey Silva Rodriguez](https://github.com/OneCode182)
+- [David Alejandro Patacon Henao](https://github.com/AlejandroHenao2572)
+- [Manuel Alejandro Guarnizo](https://github.com/MAGG0059)
 
 ---
 
