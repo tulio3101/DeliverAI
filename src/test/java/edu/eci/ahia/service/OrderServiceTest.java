@@ -1,0 +1,186 @@
+package edu.eci.ahia.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import edu.eci.ahia.exception.OrderNotFoundException;
+import edu.eci.ahia.model.entity.Order;
+import edu.eci.ahia.model.entity.OrderItem;
+import edu.eci.ahia.model.entity.Product;
+import edu.eci.ahia.model.entity.enums.State;
+import edu.eci.ahia.repository.OrderRepository;
+
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderItemService orderItemService;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    @Captor
+    private ArgumentCaptor<Order> orderCaptor;
+
+    @Test
+    void createOrder_WithOrderItems_ShouldCreateOrderAndReduceUnits() {
+        Product product = Product.builder().id(1L).build();
+        OrderItem item1 = OrderItem.builder().product(product).quantity(3).build();
+        OrderItem item2 = OrderItem.builder().product(product).quantity(2).build();
+
+        Order input = Order.builder()
+            .subTotal(100.0)
+            .orderItems(List.of(item1, item2))
+            .build();
+
+        Order savedOrder = Order.builder()
+            .id(1L)
+            .orderDate(java.time.LocalDateTime.now())
+            .state(State.IN_CONFIRMATION)
+            .subTotal(100.0)
+            .orderItems(List.of(item1, item2))
+            .build();
+
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+        Order result = orderService.createOrder(input);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals(State.IN_CONFIRMATION, result.getState());
+        assertEquals(100.0, result.getSubTotal());
+
+        verify(orderRepository).save(orderCaptor.capture());
+        Order captured = orderCaptor.getValue();
+        assertEquals(State.IN_CONFIRMATION, captured.getState());
+        assertEquals(100.0, captured.getSubTotal());
+        assertNotNull(captured.getOrderDate());
+
+        assertEquals(item1, captured.getOrderItems().get(0));
+        assertEquals(item2, captured.getOrderItems().get(1));
+
+        verify(orderItemService).reduceProductUnits(item1);
+        verify(orderItemService).reduceProductUnits(item2);
+
+        assertSame(captured, item1.getOrder());
+        assertSame(captured, item2.getOrder());
+    }
+
+    @Test
+    void createOrder_WithNullOrderItems_ShouldCreateOrderWithoutReducing() {
+        Order input = Order.builder()
+            .subTotal(50.0)
+            .orderItems(null)
+            .build();
+
+        Order savedOrder = Order.builder()
+            .id(2L)
+            .orderDate(java.time.LocalDateTime.now())
+            .state(State.IN_CONFIRMATION)
+            .subTotal(50.0)
+            .build();
+
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+        Order result = orderService.createOrder(input);
+
+        assertNotNull(result);
+        assertEquals(2L, result.getId());
+        assertEquals(State.IN_CONFIRMATION, result.getState());
+        assertEquals(50.0, result.getSubTotal());
+
+        verify(orderItemService, never()).reduceProductUnits(any());
+    }
+
+    @Test
+    void createOrder_WithEmptyOrderItems_ShouldCreateOrderWithoutReducing() {
+        Order input = Order.builder()
+            .subTotal(30.0)
+            .orderItems(List.of())
+            .build();
+
+        Order savedOrder = Order.builder()
+            .id(3L)
+            .orderDate(java.time.LocalDateTime.now())
+            .state(State.IN_CONFIRMATION)
+            .subTotal(30.0)
+            .build();
+
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+        Order result = orderService.createOrder(input);
+
+        assertNotNull(result);
+        assertEquals(3L, result.getId());
+        verify(orderItemService, never()).reduceProductUnits(any());
+    }
+
+    @Test
+    void updateState_WhenOrderExists_ShouldUpdateState() {
+        Order existing = Order.builder()
+            .id(1L)
+            .state(State.IN_CONFIRMATION)
+            .subTotal(100.0)
+            .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(orderRepository.save(any(Order.class))).thenReturn(existing);
+
+        Order result = orderService.updateState(1L, State.PREPARATION);
+
+        assertEquals(State.PREPARATION, result.getState());
+        assertEquals(State.PREPARATION, existing.getState());
+        verify(orderRepository).findById(1L);
+        verify(orderRepository).save(existing);
+    }
+
+    @Test
+    void updateState_WhenOrderNotFound_ShouldThrow() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(OrderNotFoundException.class,
+            () -> orderService.updateState(99L, State.PREPARATION));
+        verify(orderRepository).findById(99L);
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteOrder_WhenOrderExists_ShouldDelete() {
+        Order existing = Order.builder()
+            .id(1L)
+            .state(State.IN_CONFIRMATION)
+            .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        orderService.deleteOrder(1L);
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository).delete(existing);
+    }
+
+    @Test
+    void deleteOrder_WhenOrderNotFound_ShouldThrow() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(OrderNotFoundException.class,
+            () -> orderService.deleteOrder(99L));
+        verify(orderRepository).findById(99L);
+        verify(orderRepository, never()).delete(any());
+    }
+}
