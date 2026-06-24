@@ -1,8 +1,11 @@
 package edu.eci.ahia.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,5 +57,20 @@ public class OrderController {
         orderService.deleteOrder(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponseDTO> findOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderMapper.toDto(orderService.findOrderById(id)));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<OrderResponseDTO>> getAllOrdersByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(orderMapper.toDtoList(orderService.getAllOrdersByUserId(userId)));
+    }
+
+    @GetMapping("/state")
+    public ResponseEntity<List<OrderResponseDTO>> findAllOrderByState(@RequestParam State state) {
+        return ResponseEntity.ok(orderMapper.toDtoList(orderService.findAllOrderByState(state)));
     }
 }

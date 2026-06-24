@@ -5,16 +5,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class OrderItemRequestDTO {
+public class UserRequestDTO {
 
-  private OrderRequestDTO order;
+  private String name;
 
-  private ProductRequestDTO product;
+  private String email;
 
-  private int quantity;
+  private Long phoneNumber;
+
+  private List<OrderRequestDTO> orders;
 
 }

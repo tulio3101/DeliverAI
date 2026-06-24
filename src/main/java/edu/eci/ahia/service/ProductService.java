@@ -1,6 +1,7 @@
 package edu.eci.ahia.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import edu.eci.ahia.repository.ProductRepository;
 import edu.eci.ahia.exception.ProductNotFoundException;
 import edu.eci.ahia.exception.InsufficientStockException;
@@ -13,6 +14,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
+    @Transactional
     public Product createProduct(Product product){
 
         Product newProduct = Product.builder()
@@ -26,6 +28,7 @@ public class ProductService {
         return productToSave;
     }
 
+    @Transactional
     public Product updateProductPrice(Long id, double price){
 
         Product productToUpdate = productRepository.findById(id)
@@ -40,6 +43,7 @@ public class ProductService {
 
     }
 
+    @Transactional
     public Product updateProductUnits(Long id, int units){
 
         Product productToUpdate = productRepository.findById(id)
@@ -53,6 +57,7 @@ public class ProductService {
 
     }
 
+    @Transactional
     public void reduceUnits(Long id, int units) {
 
         Product product = productRepository.findById(id)
@@ -77,6 +82,7 @@ public class ProductService {
 
     }
 
+    @Transactional
     public void deleteProduct(Long id) {
         Product productToDelete = productRepository.findById(id)
             .orElseThrow(() -> new ProductNotFoundException("Product to delete with id : " + id + " not found"));
