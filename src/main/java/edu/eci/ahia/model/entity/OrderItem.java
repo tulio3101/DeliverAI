@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -23,20 +24,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderItem {
 
-   @Id
-   @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-   @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name = "orderId", nullable = false)
-   private Order order;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "orderId", nullable = false)
+  private Order order;
 
-   @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name = "productId", nullable = false)
-   private Product product;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "productId", nullable = false)
+  private Product product;
 
-   @NotNull
-   @Positive
-   private int quantity;
+  @Transient
+  private Long productId;
+
+  @NotNull
+  @Positive
+  private int quantity;
 }
-
