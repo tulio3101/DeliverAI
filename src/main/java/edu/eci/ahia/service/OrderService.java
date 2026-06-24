@@ -19,6 +19,7 @@ public class OrderService {
 
   private final OrderRepository orderRepository;
   private final OrderItemService orderItemService;
+  private final ProductService productService;
 
   @Transactional
   public Order createOrder(Order entity) {
@@ -34,6 +35,7 @@ public class OrderService {
     List<OrderItem> orderItems = newOrder.getOrderItems();
     if (orderItems != null) {
       orderItems.forEach(orderItem -> {
+        orderItem.setProduct(productService.findProductById(orderItem.getProductId()));
         orderItem.setOrder(newOrder);
         orderItemService.reduceProductUnits(orderItem);
       });

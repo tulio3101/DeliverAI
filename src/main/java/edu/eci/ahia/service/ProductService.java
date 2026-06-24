@@ -15,6 +15,12 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     @Transactional
+    public Product findProductById(Long id) {
+        return productRepository.findById(id)
+            .orElseThrow(() -> new ProductNotFoundException("Product with id: " + id + " not found"));
+    }
+
+    @Transactional
     public Product createProduct(Product product){
 
         Product newProduct = Product.builder()
