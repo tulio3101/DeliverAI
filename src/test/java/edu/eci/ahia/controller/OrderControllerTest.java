@@ -23,8 +23,6 @@ import edu.eci.ahia.exception.OrderNotFoundException;
 import edu.eci.ahia.mapper.OrderMapper;
 import edu.eci.ahia.model.dto.request.OrderItemRequestDTO;
 import edu.eci.ahia.model.dto.request.OrderRequestDTO;
-import edu.eci.ahia.model.dto.request.ProductRequestDTO;
-import edu.eci.ahia.model.dto.response.OrderItemResponseDTO;
 import edu.eci.ahia.model.dto.response.OrderResponseDTO;
 import edu.eci.ahia.model.entity.Order;
 import edu.eci.ahia.model.entity.enums.State;
@@ -44,9 +42,8 @@ class OrderControllerTest {
 
     @Test
     void createOrder_ShouldReturn201() throws Exception {
-        ProductRequestDTO productRequest = new ProductRequestDTO("Pizza", 10, 25.99);
         OrderItemRequestDTO itemRequest = new OrderItemRequestDTO();
-        itemRequest.setProduct(productRequest);
+        itemRequest.setProductId(1L);
         itemRequest.setQuantity(3);
 
         OrderRequestDTO request = new OrderRequestDTO();
@@ -72,7 +69,7 @@ class OrderControllerTest {
 
         mockMvc.perform(post("/order")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"subTotal\":77.97,\"orderItems\":[{\"product\":{\"name\":\"Pizza\",\"units\":10,\"price\":25.99},\"quantity\":3}]}"))
+                .content("{\"subTotal\":77.97,\"orderItems\":[{\"productId\":1,\"quantity\":3}]}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.subTotal").value(77.97));
@@ -110,13 +107,13 @@ class OrderControllerTest {
     }
 
     @Test
-    void updateState_WhenOrderNotFound_ShouldReturn500() throws Exception {
+    void updateState_WhenOrderNotFound_ShouldReturn404() throws Exception {
         when(orderService.updateState(anyLong(), any(State.class)))
             .thenThrow(new OrderNotFoundException("not found"));
 
         mockMvc.perform(patch("/order/99")
                 .param("state", "PREPARATION"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -126,11 +123,11 @@ class OrderControllerTest {
     }
 
     @Test
-    void deleteOrder_WhenOrderNotFound_ShouldReturn500() throws Exception {
+    void deleteOrder_WhenOrderNotFound_ShouldReturn404() throws Exception {
         doThrow(new OrderNotFoundException("not found"))
             .when(orderService).deleteOrder(99L);
 
         mockMvc.perform(delete("/order/99"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
     }
 }

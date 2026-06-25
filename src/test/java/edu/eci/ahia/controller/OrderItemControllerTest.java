@@ -22,7 +22,6 @@ import edu.eci.ahia.model.dto.request.OrderItemRequestDTO;
 import edu.eci.ahia.model.dto.response.OrderItemResponseDTO;
 import edu.eci.ahia.model.entity.OrderItem;
 import edu.eci.ahia.model.entity.Product;
-import edu.eci.ahia.model.dto.request.ProductRequestDTO;
 import edu.eci.ahia.service.OrderItemService;
 
 @WebMvcTest(OrderItemController.class)
@@ -39,9 +38,8 @@ class OrderItemControllerTest {
 
     @Test
     void createOrderItem_ShouldReturn201() throws Exception {
-        ProductRequestDTO productRequest = new ProductRequestDTO("Pizza", 10, 25.99);
         OrderItemRequestDTO request = new OrderItemRequestDTO();
-        request.setProduct(productRequest);
+        request.setProductId(1L);
         request.setQuantity(3);
 
         Product product = Product.builder().id(1L).name("Pizza").units(10).price(25.99).build();
@@ -57,7 +55,7 @@ class OrderItemControllerTest {
 
         mockMvc.perform(post("/order-items")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"product\":{\"name\":\"Pizza\",\"units\":10,\"price\":25.99},\"quantity\":3}"))
+                .content("{\"productId\":1,\"quantity\":3}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.quantity").value(3));
@@ -78,11 +76,11 @@ class OrderItemControllerTest {
     }
 
     @Test
-    void deleteOrderItem_WhenNotFound_ShouldReturn500() throws Exception {
+    void deleteOrderItem_WhenNotFound_ShouldReturn404() throws Exception {
         doThrow(new OrderItemNotFoundException("not found"))
             .when(orderItemService).deleteOrderItem(99L);
 
         mockMvc.perform(delete("/order-items/99"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
     }
 }

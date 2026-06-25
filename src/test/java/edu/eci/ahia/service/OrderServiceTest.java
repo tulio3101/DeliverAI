@@ -21,6 +21,7 @@ import edu.eci.ahia.model.entity.OrderItem;
 import edu.eci.ahia.model.entity.Product;
 import edu.eci.ahia.model.entity.enums.State;
 import edu.eci.ahia.repository.OrderRepository;
+import edu.eci.ahia.service.ProductService;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -31,6 +32,9 @@ class OrderServiceTest {
     @Mock
     private OrderItemService orderItemService;
 
+    @Mock
+    private ProductService productService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -40,8 +44,8 @@ class OrderServiceTest {
     @Test
     void createOrder_WithOrderItems_ShouldCreateOrderAndReduceUnits() {
         Product product = Product.builder().id(1L).build();
-        OrderItem item1 = OrderItem.builder().product(product).quantity(3).build();
-        OrderItem item2 = OrderItem.builder().product(product).quantity(2).build();
+        OrderItem item1 = OrderItem.builder().product(product).productId(1L).quantity(3).build();
+        OrderItem item2 = OrderItem.builder().product(product).productId(1L).quantity(2).build();
 
         Order input = Order.builder()
             .subTotal(100.0)
@@ -56,6 +60,7 @@ class OrderServiceTest {
             .orderItems(List.of(item1, item2))
             .build();
 
+        when(productService.findProductById(1L)).thenReturn(product);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
         Order result = orderService.createOrder(input);

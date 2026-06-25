@@ -83,13 +83,13 @@ class ProductControllerTest {
     }
 
     @Test
-    void updateProductPrice_WhenProductNotFound_ShouldReturn500() throws Exception {
+    void updateProductPrice_WhenProductNotFound_ShouldReturn404() throws Exception {
         when(productService.updateProductPrice(anyLong(), anyDouble()))
             .thenThrow(new ProductNotFoundException("not found"));
 
         mockMvc.perform(patch("/products/99/price")
                 .param("price", "30.00"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -108,13 +108,13 @@ class ProductControllerTest {
     }
 
     @Test
-    void updateProductUnits_WhenProductNotFound_ShouldReturn500() throws Exception {
+    void updateProductUnits_WhenProductNotFound_ShouldReturn404() throws Exception {
         when(productService.updateProductUnits(anyLong(), anyInt()))
             .thenThrow(new ProductNotFoundException("not found"));
 
         mockMvc.perform(patch("/products/99/units")
                 .param("units", "20"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -124,11 +124,11 @@ class ProductControllerTest {
     }
 
     @Test
-    void deleteProduct_WhenProductNotFound_ShouldReturn500() throws Exception {
+    void deleteProduct_WhenProductNotFound_ShouldReturn404() throws Exception {
         doThrow(new ProductNotFoundException("not found"))
             .when(productService).deleteProduct(99L);
 
         mockMvc.perform(delete("/products/99"))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
     }
 }
