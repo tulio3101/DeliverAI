@@ -103,39 +103,47 @@ src/main/java/edu/eci/ahia/
 ├── controller/
 │   ├── OrderController.java           # Order endpoints
 │   ├── OrderItemController.java       # Order item endpoints
-│   └── ProductController.java         # Product endpoints
+│   ├── ProductController.java         # Product endpoints
+│   └── UserController.java            # User endpoints
 ├── exception/
 │   ├── GlobalExceptionHandler.java    # Centralized error handling
 │   ├── InsufficientStockException.java
 │   ├── OrderItemNotFoundException.java
 │   ├── OrderNotFoundException.java
-│   └── ProductNotFoundException.java
+│   ├── ProductNotFoundException.java
+│   └── UserNotFoundException.java
 ├── mapper/
-│   ├── OrderMapper.java
 │   ├── OrderItemMapper.java
-│   └── ProductMapper.java
+│   ├── OrderMapper.java
+│   ├── ProductMapper.java
+│   └── UserMapper.java
 ├── model/
 │   ├── dto/request/                   # Request DTOs
 │   │   ├── OrderItemRequestDTO.java
 │   │   ├── OrderRequestDTO.java
-│   │   └── ProductRequestDTO.java
+│   │   ├── ProductRequestDTO.java
+│   │   └── UserRequestDTO.java
 │   ├── dto/response/                  # Response DTOs
 │   │   ├── OrderItemResponseDTO.java
 │   │   ├── OrderResponseDTO.java
-│   │   └── ProductResponseDTO.java
+│   │   ├── ProductResponseDTO.java
+│   │   └── UserResponseDTO.java
 │   └── entity/
 │       ├── Order.java
 │       ├── OrderItem.java
 │       ├── Product.java
+│       ├── User.java
 │       └── enums/State.java
 ├── repository/
 │   ├── OrderItemRepository.java
 │   ├── OrderRepository.java
-│   └── ProductRepository.java
+│   ├── ProductRepository.java
+│   └── UserRepository.java
 └── service/
     ├── OrderItemService.java
     ├── OrderService.java
-    └── ProductService.java
+    ├── ProductService.java
+    └── UserService.java
 ```
 
 ---
@@ -198,19 +206,29 @@ mvn test
 
 - **JDK 21** — [Download](https://jdk.java.net/21/)
 - **Maven 3.9+** — [Download](https://maven.apache.org/download.cgi)
+- **Docker & Docker Compose** — [Download](https://docs.docker.com/get-docker/) (optional, for PostgreSQL)
 
-### Run
+### Run with Docker (recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/tulio3101/DeliverAI.git
 cd DeliverAI
 
+# Build and run with PostgreSQL (app + database)
+docker-compose up --build
+```
+
+### Run locally (without Docker)
+
+For local development without PostgreSQL, use the H2 in-memory profile:
+
+```bash
 # Build the project
 mvn clean install
 
-# Run the application
-mvn spring-boot:run
+# Run with H2 database
+mvn spring-boot:run -Dspring.profiles.active=h2
 ```
 
 The API will be available at `http://localhost:8080`.
@@ -221,6 +239,12 @@ Once the application is running, access the interactive API documentation:
 
 ```
 http://localhost:8080/swagger-ui.html
+```
+
+The OpenAPI JSON spec is available at:
+
+```
+http://localhost:8080/v3/api-docs
 ```
 
 ---
@@ -243,28 +267,41 @@ http://localhost:8080/swagger-ui.html
 
 ### Orders
 
-| Method | Path | Body | Description |
-|--------|------|------|-------------|
+| Method | Path | Body/Params | Description |
+|--------|------|-------------|-------------|
 | `POST` | `/order` | `OrderRequestDTO` | Create a new order |
 | `PATCH` | `/order/{id}` | `?state=...` | Update order state |
 | `DELETE` | `/order/{id}` | — | Delete an order |
+| `GET` | `/order/{id}` | — | Get order by ID |
+| `GET` | `/order/user/{userId}` | — | Get orders by user |
+| `GET` | `/order/state` | `?state=...` | Get orders by state |
 
 **OrderRequestDTO:**
 ```json
 {
   "subTotal": 50.00,
   "orderItems": [
-    { "product": { "name": "Cake", "units": 1, "price": 25.00 }, "quantity": 2 }
+    { "productId": 1, "quantity": 2 }
   ]
 }
 ```
 
 ### Order Items
 
-| Method | Path | Body | Description |
-|--------|------|------|-------------|
+| Method | Path | Body/Params | Description |
+|--------|------|-------------|-------------|
 | `POST` | `/order-items` | `OrderItemRequestDTO` | Add item to an order |
 | `DELETE` | `/order-items/{id}` | — | Remove item from an order |
+
+### Users
+
+| Method | Path | Body | Description |
+|--------|------|------|-------------|
+| `POST` | `/user` | `UserRequestDTO` | Create a new user |
+| `GET` | `/user/{id}` | — | Get user by ID |
+| `GET` | `/user/all` | — | Get all users |
+| `PUT` | `/user/{id}` | `UserRequestDTO` | Update a user |
+| `DELETE` | `/user/{id}` | — | Delete a user |
 
 ---
 
