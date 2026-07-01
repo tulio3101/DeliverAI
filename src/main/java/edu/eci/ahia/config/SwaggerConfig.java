@@ -12,9 +12,9 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI().info(
             new Info()
-                .title("Delive-AI API")
-                .version("1.0")
-                .description("Swagger Documentation for DeliverAI ")
+                .title("DeliverAI API")
+                .version("1.0.0")
+                .description("API documentation for DeliverAI - Order management system")
         );
     }
 }
