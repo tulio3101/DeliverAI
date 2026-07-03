@@ -4,9 +4,11 @@ import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useBackendStatus } from "@/hooks/use-backend-status";
+import { useOrderNotifications } from "@/hooks/use-order-notifications";
 
 export default function AppLayout() {
   const backendStatus = useBackendStatus();
+  useOrderNotifications();
 
   return (
     <div className="app-bg min-h-dvh text-foreground">

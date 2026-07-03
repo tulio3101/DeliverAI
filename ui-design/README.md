@@ -96,6 +96,8 @@ Copiar `.env.example` a `.env`:
 - **`VITE_MOCK_DATA=true` (demo):** adapter mock en memoria con datos realistas etiquetados como demo en la UI (badge/banner "Datos demo").
 - **`VITE_MOCK_DATA=false` (API real):** adapter contra el backend Spring. Detecta backend caído/timeout/errores HTTP y muestra banner de degradación + toasts sin romper la UI. Health check: `GET /v3/api-docs` cada 15s.
 
+**Notificaciones de pedidos (polling):** la UI sondea `GET /order/state` (vía `api.listOrders()`) cada 10s y muestra toasts ante pedidos nuevos o cambios de estado. Solo REST polling — el backend no expone SSE/WebSocket. Primera carga silenciosa; errores de polling se silencian (el banner de estado ya cubre backend offline).
+
 ## Endpoints backend usados
 
 Según `Agents/project/api-inventory.md`:
@@ -147,7 +149,7 @@ src/
       backend-adapter.ts
       mock-adapter.ts
       index.ts         # selección de adapter por VITE_MOCK_DATA
-  hooks/               # useAsyncData, useBackendStatus
+  hooks/               # useAsyncData, useBackendStatus, useOrderNotifications
   components/
     ui/                # shadcn/ui (generado)
     layout/            # shell: sidebar, header, banners, tema
