@@ -7,15 +7,16 @@ import { ORDER_STATE_LABELS } from "@/lib/types";
 const POLL_MS = 10_000;
 
 /**
- * Notificaciones de pedidos vía polling REST (el backend no expone
- * SSE/WebSocket, así que no hay alternativa a sondear).
+ * Order notifications via REST polling (the backend exposes no
+ * SSE/WebSocket, so polling is the only option).
  *
- * Cada ciclo compara el snapshot nuevo contra el anterior:
- * - pedidos que no existían antes -> toast "Nuevo pedido #id".
- * - pedidos cuyo estado cambió -> toast "Pedido #id: A -> B".
- * La primera carga solo guarda el snapshot base, sin toasts.
- * Los errores de polling se silencian: el banner de backend-status
- * ya informa cuando el backend está offline.
+ * Each cycle compares the new snapshot against the previous one:
+ * - orders that did not exist before -> toast "Nuevo pedido #id".
+ * - orders whose state changed -> toast "Pedido #id: A -> B".
+ * The first load only stores the base snapshot, no toasts.
+ * Polling errors are silenced: the backend-status banner already
+ * informs when the backend is offline.
+ * Toast texts stay in Spanish to match the rest of the UI language.
  */
 export function useOrderNotifications(): void {
   const previousStates = useRef<Map<number, OrderState> | null>(null);

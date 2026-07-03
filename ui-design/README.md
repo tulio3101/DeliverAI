@@ -1,48 +1,48 @@
 # DeliverAI Admin UI
 
-Admin UI operacional (MVP) para DeliverAI: revisión de pedidos, estados, clientes y catálogo de productos. Construida con React + Vite + TypeScript + Tailwind CSS v4 + shadcn/ui + Biome. Estética liquid/glass tipo macOS/iOS.
+Operational Admin UI (MVP) for DeliverAI: order review, states, customers and product catalog. Built with React + Vite + TypeScript + Tailwind CSS v4 + shadcn/ui + Biome. macOS/iOS-style liquid/glass aesthetic.
 
-## Requisitos
+## Requirements
 
 - Node.js 20+
-- pnpm recomendado. Si no está activo, ejecutar:
+- pnpm recommended. If not active, run:
 
 ```bash
 corepack enable
 corepack prepare pnpm@latest --activate
 ```
 
-- Backend opcional: Spring Boot en `http://localhost:8080` (ver raíz del repo, `docker-compose.yml`).
+- Optional backend: Spring Boot at `http://localhost:8080` (see repo root, `docker-compose.yml`).
 
-## Arranque con pnpm
+## Getting started with pnpm
 
-Trabajar siempre desde el root del frontend:
+Always work from the frontend root:
 
 ```bash
 cd /home/onecode/ECI/DeliverAI/ui-design
 ```
 
-Instalar dependencias:
+Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-Levantar dev server:
+Start the dev server:
 
 ```bash
 pnpm dev
 ```
 
-Si el puerto `5173` está ocupado:
+If port `5173` is busy:
 
 ```bash
 pnpm dev -- --host 127.0.0.1 --port 5174
 ```
 
-## Linting, formato y build
+## Linting, formatting and build
 
-Biome check completo:
+Full Biome check:
 
 ```bash
 pnpm check
@@ -60,59 +60,59 @@ Biome auto-fix:
 pnpm check:fix
 ```
 
-Formato:
+Format:
 
 ```bash
 pnpm format
 ```
 
-TypeScript y build:
+TypeScript and build:
 
 ```bash
 pnpm type-check
 pnpm build
 ```
 
-Servir build:
+Serve the build:
 
 ```bash
 pnpm preview
 ```
 
-## Variables de entorno
+## Environment variables
 
-Copiar `.env.example` a `.env`:
+Copy `.env.example` to `.env`:
 
-| Variable | Default | Uso |
+| Variable | Default | Purpose |
 |---|---|---|
-| `VITE_MOCK_DATA` | `true` | `true`: datos demo locales. `false`: API real. |
-| `VITE_API_BASE_URL` | `http://localhost:8080` | Base URL del backend Spring. |
-| `MOCK_DATA` | `true` | **Alias operativo/documental** del mismo concepto. |
+| `VITE_MOCK_DATA` | `true` | `true`: local demo data. `false`: real API. |
+| `VITE_API_BASE_URL` | `http://localhost:8080` | Spring backend base URL. |
+| `MOCK_DATA` | `true` | **Operational/documentation alias** of the same concept. |
 
-> **Nota `MOCK_DATA` vs `VITE_MOCK_DATA`:** Vite solo expone al cliente variables con prefijo `VITE_`. Por eso el código lee **`VITE_MOCK_DATA`**. `MOCK_DATA` se mantiene en `.env` porque fue pedido explícitamente como flag operativo, pero no es visible para la app en el navegador. Cambios en `.env` requieren reiniciar el dev server.
+> **`MOCK_DATA` vs `VITE_MOCK_DATA` note:** Vite only exposes variables prefixed with `VITE_` to the client. That is why the code reads **`VITE_MOCK_DATA`**. `MOCK_DATA` is kept in `.env` because it was explicitly requested as an operational flag, but it is not visible to the app in the browser. Changes to `.env` require restarting the dev server.
 
-### Variables en build-time (clave para el deploy)
+### Build-time variables (key for deploys)
 
-**El `.env` nunca se sube a S3.** Las variables `VITE_*` se **incrustan como texto en el bundle JS durante `pnpm build`** — no existen en runtime ni hay servidor que las lea. Cambiar una variable del deploy exige rebuild + redeploy.
+**The `.env` file is never uploaded to S3.** `VITE_*` variables are **inlined as text into the JS bundle during `pnpm build`** — they do not exist at runtime and there is no server reading them. Changing a deploy variable requires rebuild + redeploy.
 
 ```mermaid
 flowchart LR
-    ENV[".env local<br/>gitignored"] -->|"pnpm dev / build local"| VITE["Vite build"]
-    GHV["GitHub Variables<br/>VITE_API_BASE_URL"] -->|"env: en CI"| VITE
-    TF["terraform output<br/>via update-frontend.sh"] -->|"deploy manual"| VITE
-    VITE -->|"valores incrustados en JS"| DIST["dist/"]
-    DIST -->|"solo estáticos, sin .env"| S3["S3"]
+    ENV["local .env<br/>gitignored"] -->|"pnpm dev / local build"| VITE["Vite build"]
+    GHV["GitHub Variables<br/>VITE_API_BASE_URL"] -->|"env: in CI"| VITE
+    TF["terraform output<br/>via update-frontend.sh"] -->|"manual deploy"| VITE
+    VITE -->|"values inlined into JS"| DIST["dist/"]
+    DIST -->|"static files only, no .env"| S3["S3"]
 ```
 
-- **Modo real (deploy):** `VITE_MOCK_DATA=false` + `VITE_API_BASE_URL=<url-backend-o-cloudfront>` (en producción se usa la URL de CloudFront: la API va proxyada por el mismo dominio).
-- **Modo mock/demo:** `VITE_MOCK_DATA=true` — no requiere backend.
+- **Real mode (deploy):** `VITE_MOCK_DATA=false` + `VITE_API_BASE_URL=<backend-or-cloudfront-url>` (production uses the CloudFront URL: the API is proxied through the same domain).
+- **Mock/demo mode:** `VITE_MOCK_DATA=true` — no backend required.
 
-## Modos de datos
+## Data modes
 
-- **`VITE_MOCK_DATA=true` (demo):** adapter mock en memoria con datos realistas etiquetados como demo en la UI (badge/banner "Datos demo").
-- **`VITE_MOCK_DATA=false` (API real):** adapter contra el backend Spring. Detecta backend caído/timeout/errores HTTP y muestra banner de degradación + toasts sin romper la UI. Health check: `GET /v3/api-docs` cada 15s.
+- **`VITE_MOCK_DATA=true` (demo):** in-memory mock adapter with realistic data labeled as demo in the UI ("Datos demo" badge/banner).
+- **`VITE_MOCK_DATA=false` (real API):** adapter against the real Spring backend. Detects backend down/timeout/HTTP errors and shows a degradation banner + toasts without breaking the UI. Health check: `GET /v3/api-docs` every 15s.
 
-**Notificaciones de pedidos (polling):** la UI sondea `GET /order/state` (vía `api.listOrders()`) cada 10s y muestra toasts ante pedidos nuevos o cambios de estado. Solo REST polling — el backend no expone SSE/WebSocket. Primera carga silenciosa; errores de polling se silencian (el banner de estado ya cubre backend offline).
+**Order notifications (polling):** the UI polls `GET /order/state` (via `api.listOrders()`) every 10s and shows toasts for new orders or state changes. REST polling only — the backend does not expose SSE/WebSocket. First load is silent; polling errors are silenced (the status banner already covers backend offline).
 
 ```mermaid
 sequenceDiagram
@@ -120,57 +120,57 @@ sequenceDiagram
     participant API as api.listOrders()
     participant T as Toast (sonner)
 
-    H->>API: GET /order/state x3 (primera carga)
-    API-->>H: snapshot base
-    Note over H: sin toasts, guarda Map(id, state)
-    loop cada 10s (pausa si tab oculta)
+    H->>API: GET /order/state x3 (first load)
+    API-->>H: base snapshot
+    Note over H: no toasts, stores Map(id, state)
+    loop every 10s (paused if tab hidden)
         H->>API: GET /order/state x3
-        API-->>H: órdenes actuales
-        alt id nuevo
+        API-->>H: current orders
+        alt new id
             H->>T: "Nuevo pedido #id"
-        else estado cambió
+        else state changed
             H->>T: "Pedido #id: A -> B"
-        else error de red
-            Note over H: silencio (banner ya avisa)
+        else network error
+            Note over H: silent (banner already informs)
         end
     end
 ```
 
-## Endpoints backend usados
+## Backend endpoints used
 
-Según `Agents/project/api-inventory.md`:
+Per `Agents/project/api-inventory.md`:
 
 - Products: `POST /products`, `PATCH /products/{id}/price`, `PATCH /products/{id}/units`, `DELETE /products/{id}`
 - Orders: `POST /order`, `PATCH /order/{id}?state=`, `DELETE /order/{id}`, `GET /order/{id}`, `GET /order/user/{userId}`, `GET /order/state?state=`
 - Users: `POST /user`, `GET /user/{id}`, `GET /user/all`, `PUT /user/{id}`, `DELETE /user/{id}`
 - Health: `GET /v3/api-docs`
 
-## Gaps conocidos del backend (reflejados en UI)
+## Known backend gaps (surfaced in the UI)
 
-- **No existe `GET /products` (listado).** En modo API real, la vista Productos muestra el gap explícitamente; las mutaciones (crear/actualizar/eliminar) sí operan contra la API.
-- El listado global de pedidos se compone con 3 llamadas a `GET /order/state` (no hay `GET /order` global).
-- `OrderRequestDTO` no expone `userId`: los pedidos creados desde la UI quedan sin usuario asociado (limitación del backend).
-- n8n/WhatsApp no implementado (fuera del alcance del frontend).
+- **No `GET /products` (list) exists.** In real API mode, the Products view surfaces the gap explicitly; mutations (create/update/delete) do work against the API.
+- The global order list is composed from 3 calls to `GET /order/state` (there is no global `GET /order`).
+- `OrderRequestDTO` does not expose `userId`: orders created from the UI end up with no associated user (backend limitation).
+- n8n/WhatsApp not implemented (out of the frontend's scope).
 
-## Deploy en AWS (S3 + CloudFront)
+## AWS deploy (S3 + CloudFront)
 
-El frontend se despliega como sitio estático en AWS: S3 privado + CloudFront (HTTPS, CDN, fallback SPA y proxy de API hacia el backend externo). La infraestructura, scripts y guía completa (auth, variables, rollback, teardown) viven en [`infra/aws/frontend/README.md`](../infra/aws/frontend/README.md).
+The frontend deploys as a static site on AWS: private S3 + CloudFront (HTTPS, CDN, SPA fallback and API proxy to the external backend). Infrastructure, scripts and the full guide (auth, variables, rollback, teardown) live in [`infra/aws/frontend/README.md`](../infra/aws/frontend/README.md).
 
-- **CI (PRs a `develop`):** `.github/workflows/frontend-ci.yml` corre `pnpm check`, `pnpm type-check` y `pnpm build`.
-- **Deploy (push a `develop` o manual):** `.github/workflows/frontend-deploy.yml` construye con `VITE_MOCK_DATA=false` y `VITE_API_BASE_URL` (GitHub Variable), sincroniza `dist/` a S3 vía OIDC (sin AWS keys) e invalida CloudFront.
-- **Deploy manual local:** `infra/aws/frontend/scripts/update-frontend.sh`.
+- **CI (PRs to `develop`):** `.github/workflows/frontend-ci.yml` runs `pnpm check`, `pnpm type-check` and `pnpm build`.
+- **Deploy (push to `develop` or manual):** `.github/workflows/frontend-deploy.yml` builds with `VITE_MOCK_DATA=false` and `VITE_API_BASE_URL` (GitHub Variable), syncs `dist/` to S3 via OIDC (no AWS keys) and invalidates CloudFront.
+- **Manual local deploy:** `infra/aws/frontend/scripts/update-frontend.sh`.
 
 ```mermaid
 flowchart LR
     A["pnpm build<br/>VITE_MOCK_DATA=false<br/>VITE_API_BASE_URL"] --> B["dist/"]
     B --> C["aws s3 sync dist/ --delete"]
     C --> D["aws cloudfront<br/>create-invalidation /*"]
-    D --> E["https://...cloudfront.net<br/>sirviendo build nuevo"]
+    D --> E["https://...cloudfront.net<br/>serving the new build"]
 ```
 
-## Docker (paridad local/demo)
+## Docker (local/demo parity)
 
-Imagen opcional multi-stage (build pnpm → Nginx sirviendo `dist/` con fallback SPA). **No** es el path de deploy en AWS; sirve para demos locales y validación en CI.
+Optional multi-stage image (pnpm build → Nginx serving `dist/` with SPA fallback). **Not** the AWS deploy path; useful for local demos and CI validation.
 
 ```bash
 docker build -t deliverai-frontend \
@@ -180,49 +180,51 @@ docker build -t deliverai-frontend \
 docker run --rm -p 8081:80 deliverai-frontend
 ```
 
-## Arquitectura frontend
+## Frontend architecture
 
 ```mermaid
 flowchart TB
     PAGES["pages/<br/>dashboard, orders, products,<br/>customers, settings"] --> HOOKS["hooks/<br/>useAsyncData, useBackendStatus,<br/>useOrderNotifications"]
-    HOOKS --> API["lib/api/index.ts<br/>contrato DataAdapter"]
+    HOOKS --> API["lib/api/index.ts<br/>DataAdapter contract"]
     PAGES --> API
-    API -->|"VITE_MOCK_DATA=true"| MOCK["mock-adapter<br/>datos demo en memoria"]
+    API -->|"VITE_MOCK_DATA=true"| MOCK["mock-adapter<br/>in-memory demo data"]
     API -->|"VITE_MOCK_DATA=false"| BACK["backend-adapter"]
     BACK --> HTTP["http.ts<br/>fetch + timeout + ApiError"]
-    HTTP -->|"VITE_API_BASE_URL"| SPRING["Backend Spring<br/>directo o vía CloudFront"]
+    HTTP -->|"VITE_API_BASE_URL"| SPRING["Spring backend<br/>direct or via CloudFront"]
 ```
 
 ```
 src/
   lib/
-    config.ts          # env central (VITE_*)
-    types.ts           # tipos alineados a DTOs del backend
-    format.ts          # formateadores es-CO
-    mock-data.ts       # datos demo
+    config.ts          # central env (VITE_*)
+    types.ts           # types aligned with backend DTOs
+    format.ts          # es-CO formatters
+    mock-data.ts       # demo data
     api/
-      data-adapter.ts  # contrato DataAdapter (única interfaz de datos de la UI)
-      http.ts          # fetch con timeout + ApiError tipado
+      data-adapter.ts  # DataAdapter contract (the UI's single data interface)
+      http.ts          # fetch with timeout + typed ApiError
       backend-adapter.ts
       mock-adapter.ts
-      index.ts         # selección de adapter por VITE_MOCK_DATA
+      index.ts         # adapter selection by VITE_MOCK_DATA
   hooks/               # useAsyncData, useBackendStatus, useOrderNotifications
   components/
-    ui/                # shadcn/ui (generado)
-    layout/            # shell: sidebar, header, banners, tema
+    ui/                # shadcn/ui (generated)
+    layout/            # shell: sidebar, header, banners, theme
   pages/               # dashboard, orders, products, customers, settings
 ```
 
-Regla: los componentes de página nunca hacen `fetch` directo; todo pasa por `api` (`src/lib/api`).
+Rule: page components never `fetch` directly; everything goes through `api` (`src/lib/api`).
 
 ## Troubleshooting
 
-| Síntoma | Causa probable | Solución |
+| Symptom | Likely cause | Fix |
 |---|---|---|
-| Errores **CORS** en consola | La app llama al backend en otro dominio directamente | Usar la URL de CloudFront como `VITE_API_BASE_URL` (API proxyada = mismo origen) o habilitar el origen en `CorsConfig` del backend |
-| **Mixed content** bloqueado | Página HTTPS llamando API `http://` | `VITE_API_BASE_URL` siempre `https://` en deploy; CloudFront ya fuerza HTTPS |
-| Banner "backend offline" permanente | API caída, URL errónea en build, o cold start de Azure (free tier tarda ~20-60s) | Probar `curl <url>/v3/api-docs`; verificar la variable con la que se hizo el build; reintentar tras el cold start |
-| **404 al refrescar** una ruta (`/orders`) | Falta fallback SPA | Ya cubierto: CloudFront 403/404→`index.html` y Nginx `try_files`; si aparece, revisar `custom_error_response` en Terraform |
-| Deploy hecho pero se ve **versión vieja** | Cache CloudFront/navegador | Verificar que corrió `create-invalidation /*`; hard-refresh (Ctrl+Shift+R). `index.html` no se cachea; los assets van con hash |
-| Cambié una variable y "no aplica" | `VITE_*` es build-time | Rebuild + redeploy (workflow o `update-frontend.sh`); en dev, reiniciar `pnpm dev` |
-| Productos no listan en modo API | Gap real del backend (`GET /products` no existe) | No es bug del frontend; ver tabla de gaps |
+| **CORS** errors in console | The app calls the backend on another domain directly | Use the CloudFront URL as `VITE_API_BASE_URL` (proxied API = same origin) or allow the origin in the backend's `CorsConfig` |
+| **Mixed content** blocked | HTTPS page calling an `http://` API | `VITE_API_BASE_URL` must always be `https://` in deploys; CloudFront already forces HTTPS |
+| Permanent "backend offline" banner | API down, wrong URL baked into the build, or Azure cold start (free tier takes ~20-60s) | Try `curl <url>/v3/api-docs`; verify the variable the build used; retry after the cold start |
+| **404 on refresh** of a route (`/orders`) | Missing SPA fallback | Already covered: CloudFront 403/404→`index.html` and Nginx `try_files`; if it shows up, check `custom_error_response` in Terraform |
+| Deploy done but **old version** shows | CloudFront/browser cache | Check that `create-invalidation /*` ran; hard-refresh (Ctrl+Shift+R). `index.html` is not cached; assets are hash-named |
+| Changed a variable and "nothing happens" | `VITE_*` is build-time | Rebuild + redeploy (workflow or `update-frontend.sh`); in dev, restart `pnpm dev` |
+| Products don't list in API mode | Real backend gap (`GET /products` does not exist) | Not a frontend bug; see the gaps table |
+
+> UI-facing texts (state labels, toasts like "Nuevo pedido #id") remain in Spanish on purpose: the product's end users are Spanish-speaking operators.

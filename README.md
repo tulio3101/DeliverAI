@@ -17,45 +17,45 @@
 
 </div>
 
-**DeliverAI** es un proyecto académico del curso **Arquitecturas de Hiperautomatización: Diseño, Implementación y Gobierno de Agentes de IA en Contextos Empresariales** de la **Escuela Colombiana de Ingeniería Julio Garavito** (intersemestral 2026-I).
+**DeliverAI** is an academic project developed for the course **Hyperautomation Architectures: Design, Implementation and Governance of AI Agents in Business Contexts** at the **Colombian School of Engineering Julio Garavito** (intersemester period 2026-I).
 
-Automatiza el flujo de pedidos por WhatsApp para pequeños y medianos negocios: el cliente escribe al negocio, un agente de IA orquestado en **n8n** entiende el pedido, lo confirma y lo persiste vía **API REST**; el dueño del negocio lo gestiona desde el **Admin UI**.
+It automates the WhatsApp ordering flow for small and medium businesses: the customer texts the business, an AI agent orchestrated in **n8n** understands the order, confirms it and persists it through a **REST API**; the business owner manages it from the **Admin UI**.
 
 ```
-Cliente (WhatsApp) → n8n (Agente IA) → REST API → PostgreSQL
+Customer (WhatsApp) → n8n (AI Agent) → REST API → PostgreSQL
                                             ↑
-                              Admin UI (React) — operador
+                              Admin UI (React) — operator
 ```
 
 ---
 
-## 📌 Estado actual vs objetivo
+## 📌 Current state vs target
 
-| Componente | Estado | Dónde corre |
+| Component | Status | Where it runs |
 |---|---|---|
-| **REST API** (Spring Boot) | ✅ Implementada en `src/` | Desplegada **externa** en Azure Web App |
-| **PostgreSQL** | ✅ Operativa | Junto al backend (Docker Compose en local) |
-| **Admin UI** (React) | ✅ Implementada en `ui-design/` | Desplegada en **AWS S3 + CloudFront** |
-| **Infra frontend** (Terraform) | ✅ Implementada en `infra/aws/frontend/` | Aplicada en AWS `us-east-1` |
-| **CI/CD frontend** | ✅ GitHub Actions + OIDC | GitHub |
-| **n8n workflow + agente IA** | ⚠️ **Externo** — corre fuera del repo; export JSON pendiente en `n8n/` | Instancia n8n externa |
-| **WhatsApp Business** | ⚠️ Externo/pendiente de documentar en repo | Meta / n8n externo |
-| **Notificaciones push (SSE/WS)** | ❌ Pendiente — MVP usa polling REST | — |
+| **REST API** (Spring Boot) | ✅ Implemented in `src/` | Deployed **externally** on Azure Web App |
+| **PostgreSQL** | ✅ Operational | Next to the backend (Docker Compose locally) |
+| **Admin UI** (React) | ✅ Implemented in `ui-design/` | Deployed on **AWS S3 + CloudFront** |
+| **Frontend infra** (Terraform) | ✅ Implemented in `infra/aws/frontend/` | Applied in AWS `us-east-1` |
+| **Frontend CI/CD** | ✅ GitHub Actions + OIDC | GitHub |
+| **n8n workflow + AI agent** | ⚠️ **External** — runs outside the repo; JSON export pending in `n8n/` | External n8n instance |
+| **WhatsApp Business** | ⚠️ External/pending documentation in repo | Meta / external n8n |
+| **Push notifications (SSE/WS)** | ❌ Pending — MVP uses REST polling | — |
 
-> El frontend soporta **modo mock** (`VITE_MOCK_DATA=true`, datos demo sin backend) y **modo API real**.
+> The frontend supports **mock mode** (`VITE_MOCK_DATA=true`, demo data without a backend) and **real API mode**.
 
 ---
 
-## 🏗️ Arquitectura general (System Context)
+## 🏗️ System architecture (System Context)
 
 ```mermaid
 flowchart LR
-    C["Cliente<br/>WhatsApp"] -->|mensajes| WA["WhatsApp Business"]
-    OP["Operador /<br/>dueño del negocio"] -->|HTTPS| CF["CloudFront + S3<br/>AWS us-east-1"]
+    C["Customer<br/>WhatsApp"] -->|messages| WA["WhatsApp Business"]
+    OP["Operator /<br/>business owner"] -->|HTTPS| CF["CloudFront + S3<br/>AWS us-east-1"]
 
-    subgraph EXT["Servicios externos"]
-        WA --> N8N["n8n workflow +<br/>Agente IA - externo"]
-        N8N -.->|inferencia| LLM["Proveedor LLM"]
+    subgraph EXT["External services"]
+        WA --> N8N["n8n workflow +<br/>AI agent - external"]
+        N8N -.->|inference| LLM["LLM provider"]
     end
 
     subgraph AZ["Azure"]
@@ -65,156 +65,156 @@ flowchart LR
     end
 
     N8N -->|"HTTP REST"| API
-    CF -->|"SPA estática"| OP
+    CF -->|"static SPA"| OP
     CF -->|"proxy /order* /products* /user* /v3/*"| API
 ```
 
-El **Admin UI** llama a la API a través de CloudFront (mismo origen → sin CORS ni mixed-content). El flujo conversacional (WhatsApp → n8n → LLM) corre **fuera de este repo**; su export JSON está pendiente en `n8n/`.
+The **Admin UI** calls the API through CloudFront (same origin → no CORS or mixed content). The conversational flow (WhatsApp → n8n → LLM) runs **outside this repo**; its JSON export is pending in `n8n/`.
 
-### Contenedores (C4 Container)
+### Containers (C4 Container)
 
 ```mermaid
 flowchart TB
     subgraph AWS["AWS us-east-1"]
-        S3["S3 bucket privado<br/>assets estáticos"]
+        S3["Private S3 bucket<br/>static assets"]
         CFD["CloudFront distribution<br/>HTTPS + CDN + SPA fallback"]
         CFD -->|"OAC SigV4"| S3
     end
 
     subgraph Azure["Azure Web App"]
-        SPRING["API Spring Boot<br/>Controller-Service-Repository"]
+        SPRING["Spring Boot API<br/>Controller-Service-Repository"]
         PG[("PostgreSQL 16")]
         SPRING --> PG
     end
 
-    subgraph Externo["Plataforma n8n externa"]
-        WF["Workflow n8n"]
-        AG["Agente conversacional"]
+    subgraph External["External n8n platform"]
+        WF["n8n workflow"]
+        AG["Conversational agent"]
         WF --> AG
     end
 
-    BROWSER["Navegador del operador<br/>React SPA"] -->|HTTPS| CFD
-    CFD -->|"behaviors API<br/>cache disabled"| SPRING
-    BROWSER -.->|"polling cada 10s<br/>GET /order/state"| CFD
-    AG -.->|LLM| PROV["Proveedor de modelo"]
+    BROWSER["Operator's browser<br/>React SPA"] -->|HTTPS| CFD
+    CFD -->|"API behaviors<br/>cache disabled"| SPRING
+    BROWSER -.->|"polling every 10s<br/>GET /order/state"| CFD
+    AG -.->|LLM| PROV["Model provider"]
     WF -->|"POST /order, /user"| SPRING
 ```
 
 ---
 
-## 🔄 Flujo de órdenes end-to-end
+## 🔄 End-to-end order flow
 
 ```mermaid
 sequenceDiagram
-    actor Cliente
+    actor Customer
     participant WA as WhatsApp Business
-    participant N8N as n8n + Agente IA (externo)
+    participant N8N as n8n + AI agent (external)
     participant API as DeliverAI API (Azure)
     participant DB as PostgreSQL
     participant UI as Admin UI (CloudFront)
-    actor Operador
+    actor Operator
 
-    Cliente->>WA: "Quiero 2 tortas de chocolate"
-    WA->>N8N: webhook mensaje entrante
-    N8N->>N8N: agente interpreta intención (LLM)
-    N8N->>Cliente: preguntas de aclaración + resumen
-    Cliente->>N8N: confirmación explícita
-    N8N->>API: POST /order (items confirmados)
-    API->>DB: persistir orden + descontar stock
-    API-->>N8N: 201 orden creada (IN_CONFIRMATION)
-    N8N-->>Cliente: confirmación del pedido
-    loop cada 10s
-        UI->>API: GET /order/state (vía CloudFront)
-        API-->>UI: órdenes actuales
+    Customer->>WA: "I want 2 chocolate cakes"
+    WA->>N8N: inbound message webhook
+    N8N->>N8N: agent interprets intent (LLM)
+    N8N->>Customer: clarifying questions + summary
+    Customer->>N8N: explicit confirmation
+    N8N->>API: POST /order (confirmed items)
+    API->>DB: persist order + reduce stock
+    API-->>N8N: 201 order created (IN_CONFIRMATION)
+    N8N-->>Customer: order confirmation
+    loop every 10s
+        UI->>API: GET /order/state (via CloudFront)
+        API-->>UI: current orders
     end
-    UI->>Operador: toast "Nuevo pedido #id"
-    Operador->>UI: cambiar estado (PREPARATION → COMPLETED)
+    UI->>Operator: toast "New order #id"
+    Operator->>UI: change state (PREPARATION → COMPLETED)
     UI->>API: PATCH /order/{id}?state=
 ```
 
-Estados de orden: `IN_CONFIRMATION` → `PREPARATION` → `COMPLETED`.
+Order states: `IN_CONFIRMATION` → `PREPARATION` → `COMPLETED`.
 
 ---
 
-## 📦 Módulos del monorepo
+## 📦 Monorepo modules
 
-| Ruta | Módulo | Estado |
+| Path | Module | Status |
 |---|---|---|
-| `src/` | REST API Spring Boot (Java 21, Maven) | ✅ Completa |
-| `ui-design/` | Admin UI React 19 + Vite + Tailwind 4 + shadcn/ui | ✅ Completa (MVP) |
-| `infra/aws/frontend/` | Terraform: S3, CloudFront, IAM OIDC + scripts operativos | ✅ Aplicada |
-| `.github/workflows/` | CI/CD backend (Azure) y frontend (AWS) | ✅ Activos |
-| `n8n/` | Export de workflows n8n | ⚠️ Pendiente (corre externo) |
-| `docker-compose.yml` | API + PostgreSQL local | ✅ |
+| `src/` | Spring Boot REST API (Java 21, Maven) | ✅ Complete |
+| `ui-design/` | Admin UI React 19 + Vite + Tailwind 4 + shadcn/ui | ✅ Complete (MVP) |
+| `infra/aws/frontend/` | Terraform: S3, CloudFront, IAM OIDC + operational scripts | ✅ Applied |
+| `.github/workflows/` | Backend (Azure) and frontend (AWS) CI/CD | ✅ Active |
+| `n8n/` | n8n workflow exports | ⚠️ Pending (runs externally) |
+| `docker-compose.yml` | Local API + PostgreSQL | ✅ |
 
-## ⚙️ Tecnologías
+## ⚙️ Tech stack
 
-| Capa | Tecnología | Uso |
+| Layer | Technology | Purpose |
 |---|---|---|
-| Backend | Java 21, Spring Boot 3.4, Spring Data JPA/Hibernate | API REST y persistencia |
+| Backend | Java 21, Spring Boot 3.4, Spring Data JPA/Hibernate | REST API and persistence |
 | Backend | MapStruct, Lombok, Jakarta Validation, SpringDoc OpenAPI | Mapping, DTOs, docs |
-| Backend | JUnit 5 + Mockito | Tests unitarios |
-| Datos | PostgreSQL 16 | Almacén operacional |
+| Backend | JUnit 5 + Mockito | Unit tests |
+| Data | PostgreSQL 16 | Operational store |
 | Frontend | React 19, Vite 8, TypeScript, Tailwind CSS 4, shadcn/ui, Biome | Admin UI |
-| Automatización | n8n + agente LLM *(externo)* | Conversación WhatsApp |
-| Infra | Terraform, AWS S3 + CloudFront + IAM OIDC | Hosting estático frontend |
+| Automation | n8n + LLM agent *(external)* | WhatsApp conversation |
+| Infra | Terraform, AWS S3 + CloudFront + IAM OIDC | Frontend static hosting |
 | CI/CD | GitHub Actions | Checks + deploys |
 
 ---
 
-## 📡 API — endpoints principales
+## 📡 API — main endpoints
 
-Inventario completo en Swagger: `/swagger-ui.html` · OpenAPI: `/v3/api-docs`.
+Full inventory in Swagger: `/swagger-ui.html` · OpenAPI: `/v3/api-docs`.
 
-| Recurso | Endpoints | Nota |
+| Resource | Endpoints | Note |
 |---|---|---|
-| Products | `POST /products`, `PATCH /products/{id}/price`, `PATCH /products/{id}/units`, `DELETE /products/{id}` | ⚠️ **No existe GET de listado** (gap conocido) |
-| Orders | `POST /order`, `GET /order/{id}`, `GET /order/user/{userId}`, `GET /order/state?state=`, `PATCH /order/{id}?state=`, `DELETE /order/{id}` | Sin `GET /order` global; el UI compone con 3 llamadas por estado |
+| Products | `POST /products`, `PATCH /products/{id}/price`, `PATCH /products/{id}/units`, `DELETE /products/{id}` | ⚠️ **No list GET endpoint** (known gap) |
+| Orders | `POST /order`, `GET /order/{id}`, `GET /order/user/{userId}`, `GET /order/state?state=`, `PATCH /order/{id}?state=`, `DELETE /order/{id}` | No global `GET /order`; the UI composes it with 3 per-state calls |
 | Order Items | `POST /order-items`, `DELETE /order-items/{id}` | |
 | Users | `POST /user`, `GET /user/{id}`, `GET /user/all`, `PUT /user/{id}`, `DELETE /user/{id}` | |
 
 ---
 
-## ☁️ Deploy frontend-only en AWS
+## ☁️ Frontend-only deploy on AWS
 
-Solo el **frontend** vive en AWS. Backend/n8n permanecen externos.
+Only the **frontend** lives on AWS. Backend/n8n remain external.
 
-- **S3 privado**: aloja `ui-design/dist` (build Vite). Sin acceso público; CloudFront lee vía Origin Access Control.
-- **CloudFront**: HTTPS, CDN global, fallback SPA (403/404 → `index.html`) y **proxy de API** — los paths del backend se enrutan al origin externo, evitando CORS.
-- **Variables build-time de Vite**: `VITE_MOCK_DATA` y `VITE_API_BASE_URL` se inyectan durante `pnpm build` (no existen en runtime; ver [`ui-design/README.md`](ui-design/README.md)).
-- Justificación completa (por qué no EC2/ECS/ECR, región, costos): [`infra/aws/frontend/README.md`](infra/aws/frontend/README.md).
+- **Private S3**: hosts `ui-design/dist` (Vite build). No public access; CloudFront reads via Origin Access Control.
+- **CloudFront**: HTTPS, global CDN, SPA fallback (403/404 → `index.html`) and **API proxy** — backend paths are routed to the external origin, avoiding CORS.
+- **Vite build-time variables**: `VITE_MOCK_DATA` and `VITE_API_BASE_URL` are injected during `pnpm build` (they do not exist at runtime; see [`ui-design/README.md`](ui-design/README.md)).
+- Full rationale (why not EC2/ECS/ECR, region, costs): [`infra/aws/frontend/README.md`](infra/aws/frontend/README.md).
 
-### Diagrama de deployment
+### Deployment diagram
 
 ```mermaid
 flowchart LR
-    DEV["Desarrollador<br/>push a develop"] --> GHA["GitHub Actions<br/>frontend-deploy.yml"]
-    GHA -->|"OIDC role<br/>sin AWS keys"| IAM["IAM role<br/>deploy mínimo"]
-    GHA -->|"pnpm build<br/>VITE_* inyectadas"| DIST["ui-design/dist"]
-    DIST -->|"aws s3 sync"| S3["S3 privado"]
+    DEV["Developer<br/>push to develop"] --> GHA["GitHub Actions<br/>frontend-deploy.yml"]
+    GHA -->|"OIDC role<br/>no AWS keys"| IAM["IAM role<br/>minimal deploy"]
+    GHA -->|"pnpm build<br/>VITE_* injected"| DIST["ui-design/dist"]
+    DIST -->|"aws s3 sync"| S3["Private S3"]
     GHA -->|invalidation| CF["CloudFront"]
     CF -->|OAC| S3
-    CF -->|"proxy API"| BE["Backend externo<br/>Azure Web App"]
-    U["Navegador"] -->|HTTPS| CF
+    CF -->|"API proxy"| BE["External backend<br/>Azure Web App"]
+    U["Browser"] -->|HTTPS| CF
 ```
 
-## 🔔 Notificaciones (MVP)
+## 🔔 Notifications (MVP)
 
-- **Hoy:** el Admin UI hace **polling REST** cada 10s a `GET /order/state` y muestra toasts ante pedidos nuevos o cambios de estado. Sin infraestructura adicional.
-- **Futuro posible:** SSE o WebSocket si el backend los expone; el polling se reemplazaría en un solo hook (`use-order-notifications.ts`).
+- **Today:** the Admin UI does **REST polling** every 10s against `GET /order/state` and shows toasts for new orders or state changes. No extra infrastructure.
+- **Possible future:** SSE or WebSocket if the backend exposes them; polling would be replaced inside a single hook (`use-order-notifications.ts`).
 
 ---
 
-## 🚀 Guía rápida local
+## 🚀 Local quick start
 
 ### Backend + DB (Docker Compose)
 
 ```bash
 docker-compose up --build
-# API en http://localhost:8080 · Swagger en /swagger-ui.html
+# API at http://localhost:8080 · Swagger at /swagger-ui.html
 ```
 
-### Backend sin Docker (H2 en memoria)
+### Backend without Docker (in-memory H2)
 
 ```bash
 mvn clean install
@@ -226,12 +226,12 @@ mvn spring-boot:run -Dspring.profiles.active=h2
 ```bash
 cd ui-design
 pnpm install
-pnpm dev          # http://localhost:5173 (modo mock por defecto)
+pnpm dev          # http://localhost:5173 (mock mode by default)
 ```
 
-Modo API real y demás operación del frontend: [`ui-design/README.md`](ui-design/README.md).
+Real API mode and other frontend operations: [`ui-design/README.md`](ui-design/README.md).
 
-### Tests backend
+### Backend tests
 
 ```bash
 mvn test
@@ -243,42 +243,42 @@ mvn test
 
 ```mermaid
 flowchart LR
-    PR["PR hacia develop"] --> CI["frontend-ci.yml<br/>biome + tsc + build"]
+    PR["PR to develop"] --> CI["frontend-ci.yml<br/>biome + tsc + build"]
     PR --> BCI["pipeline.yml<br/>maven build + test"]
-    MERGE["push / merge<br/>a develop"] --> DEPLOY["frontend-deploy.yml<br/>checks → build → S3 sync<br/>→ invalidación CloudFront"]
-    MERGE --> BDEPLOY["pipeline.yml<br/>deploy jar a Azure"]
+    MERGE["push / merge<br/>to develop"] --> DEPLOY["frontend-deploy.yml<br/>checks → build → S3 sync<br/>→ CloudFront invalidation"]
+    MERGE --> BDEPLOY["pipeline.yml<br/>deploy jar to Azure"]
     DEPLOY -->|OIDC| AWS["AWS"]
-    BDEPLOY -->|credenciales| AZ["Azure"]
+    BDEPLOY -->|credentials| AZ["Azure"]
 ```
 
-| Workflow | Trigger | Hace |
+| Workflow | Trigger | Does |
 |---|---|---|
-| `pipeline.yml` | PR/push `main`/`develop` | Build Maven, tests, deploy jar a Azure Web App |
-| `frontend-ci.yml` | PR a `develop` (paths frontend) | `pnpm check` + `type-check` + `build` — sin AWS |
-| `frontend-deploy.yml` | Push a `develop` / manual | Checks → build real → OIDC → S3 sync → invalidación |
+| `pipeline.yml` | PR/push `main`/`develop` | Maven build, tests, deploy jar to Azure Web App |
+| `frontend-ci.yml` | PR to `develop` (frontend paths) | `pnpm check` + `type-check` + `build` — no AWS |
+| `frontend-deploy.yml` | Push to `develop` / manual | Checks → real build → OIDC → S3 sync → invalidation |
 
 ---
 
-## ⚠️ Riesgos y gaps conocidos
+## ⚠️ Known risks and gaps
 
-| Gap | Impacto | Mitigación |
+| Gap | Impact | Mitigation |
 |---|---|---|
-| No existe `GET /products` (listado) | Agente/UI no pueden listar catálogo desde API | UI muestra el gap; endpoint pendiente en backend |
-| `OrderRequestDTO` sin `userId` | Órdenes quedan sin usuario asociado | Documentado; requiere cambio de DTO backend |
-| Export n8n no versionado en repo | Workflow no reproducible desde el repo | `n8n/` reservado; exportar JSON pendiente |
-| Fallback SPA global 403/404 | Un 403/404 real del backend vía CloudFront devuelve `index.html` 200 | Documentado en `infra/aws/frontend/main.tf` |
-| Polling 10s | Latencia de notificación hasta 10s + carga ligera en API | Aceptable para MVP; SSE/WS futuro |
-| Estado Terraform local | Un solo operador de infra a la vez | Backend remoto (S3 + lock) si el equipo crece |
+| No `GET /products` (list) | Agent/UI cannot list the catalog from the API | UI surfaces the gap; endpoint pending in backend |
+| `OrderRequestDTO` lacks `userId` | Orders end up with no associated user | Documented; requires backend DTO change |
+| n8n export not versioned in repo | Workflow not reproducible from the repo | `n8n/` reserved; JSON export pending |
+| Global SPA fallback 403/404 | A real backend 403/404 through CloudFront returns `index.html` 200 | Documented in `infra/aws/frontend/main.tf` |
+| 10s polling | Notification latency up to 10s + light API load | Acceptable for MVP; SSE/WS in the future |
+| Local Terraform state | One infra operator at a time | Remote backend (S3 + lock) if the team grows |
 
 ---
 
-## 📐 Diagrama visual
+## 📐 Visual diagram
 
-Diagrama editable de arquitectura general: [`docs/architecture/deliverai-system-architecture.excalidraw`](docs/architecture/deliverai-system-architecture.excalidraw) (abrir en [excalidraw.com](https://excalidraw.com) → File → Open).
+Editable system architecture diagram: [`docs/architecture/deliverai-system-architecture.excalidraw`](docs/architecture/deliverai-system-architecture.excalidraw) (open at [excalidraw.com](https://excalidraw.com) → File → Open).
 
 ---
 
-## 🙌 Equipo
+## 🙌 Team
 
 - [Tulio Riaño Sánchez](https://github.com/tulio3101)
 - [Julian Camilo Lopez Barrero](https://github.com/JulianLopez11)
@@ -286,6 +286,6 @@ Diagrama editable de arquitectura general: [`docs/architecture/deliverai-system-
 - [David Alejandro Patacon Henao](https://github.com/AlejandroHenao2572)
 - [Manuel Alejandro Guarnizo](https://github.com/MAGG0059)
 
-## 📄 Licencia
+## 📄 License
 
-Proyecto bajo **MIT License** — ver [LICENSE](LICENSE).
+Licensed under the **MIT License** — see [LICENSE](LICENSE).

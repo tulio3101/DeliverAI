@@ -1,120 +1,120 @@
 # DeliverAI Frontend — AWS Static Hosting (S3 + CloudFront)
 
-Infraestructura Terraform para desplegar **solo el frontend** (`ui-design/dist`) en AWS. El backend Spring Boot sigue desplegado fuera de AWS (Azure Web App) y no se toca desde aquí.
+Terraform infrastructure to deploy **only the frontend** (`ui-design/dist`) on AWS. The Spring Boot backend remains deployed outside AWS (Azure Web App) and is not touched from here.
 
-## Arquitectura
+## Architecture
 
 ```
-Usuario ──HTTPS──> CloudFront ──┬── default (/*)            ──> S3 privado (React SPA, via OAC)
-                                └── /order*, /order-items*,
-                                    /products*, /user*,
-                                    /v3/*, /swagger-ui*      ──> Backend externo (Azure, HTTPS)
+User ──HTTPS──> CloudFront ──┬── default (/*)             ──> private S3 (React SPA, via OAC)
+                             └── /order*, /order-items*,
+                                 /products*, /user*,
+                                 /v3/*, /swagger-ui*       ──> external backend (Azure, HTTPS)
 ```
 
-### ¿Por qué S3 + CloudFront?
+### Why S3 + CloudFront?
 
-- Vite genera assets estáticos puros (`ui-design/dist`): no hay SSR ni proceso Node en runtime, así que un bucket S3 basta como almacenamiento.
-- CloudFront aporta HTTPS, CDN global, cache, invalidación y el fallback SPA (403/404 → `index.html` 200) que React Router necesita.
-- El bucket es **privado**: solo CloudFront puede leerlo vía Origin Access Control (OAC, SigV4), condicionado al ARN de la distribución.
-- Proxy de API por CloudFront: los paths del backend se enrutan al origin externo, así el SPA llama a su mismo origen y se evitan CORS y mixed-content.
+- Vite produces pure static assets (`ui-design/dist`): no SSR and no Node process at runtime, so an S3 bucket is enough as storage.
+- CloudFront provides HTTPS, global CDN, caching, invalidation and the SPA fallback (403/404 → `index.html` 200) that React Router needs.
+- The bucket is **private**: only CloudFront can read it via Origin Access Control (OAC, SigV4), conditioned on the distribution ARN.
+- API proxying through CloudFront: backend paths are routed to the external origin, so the SPA calls its own origin and CORS/mixed-content are avoided.
 
-### ¿Por qué NO EC2/ECS/ECR?
+### Why NOT EC2/ECS/ECR?
 
-- EC2/ECS implican servidores/containers corriendo 24/7 para servir archivos estáticos: costo y operación innecesarios.
-- ECR es solo un registry de imágenes, no hosting; una imagen Nginx (ver `ui-design/Dockerfile`) sirve para paridad local/demo, no como path de deploy en AWS.
+- EC2/ECS mean servers/containers running 24/7 to serve static files: unnecessary cost and operations.
+- ECR is only an image registry, not hosting; an Nginx image (see `ui-design/Dockerfile`) is for local/demo parity, not the AWS deploy path.
 
-### Región: `us-east-1`
+### Region: `us-east-1`
 
-- Cliente en Colombia/Bogotá: CloudFront es global y `PriceClass_All` (default) incluye edge locations en Sudamérica.
-- Backend está en Azure (probablemente USA); `us-east-1` es estable, default/no opt-in y usualmente buena latencia hacia backends en USA.
-- Si se confirma backend en US West, `us-west-2` sería alternativa. Si el backend real estuviera en São Paulo, evaluar `sa-east-1` a futuro.
+- Customer in Colombia/Bogotá: CloudFront is global and `PriceClass_All` (default) includes South American edge locations.
+- The backend is on Azure (Canada Central); `us-east-1` is stable, default/non-opt-in and usually good latency towards North American backends.
+- If the backend ever moves to US West, `us-west-2` would be an alternative. If it moved to São Paulo, evaluate `sa-east-1`.
 
-## Recursos creados
+## Resources created
 
-- S3 bucket privado (`<project_name>-<account_id>`), public access block completo, ownership enforced, versioning opcional.
-- CloudFront distribution: origin S3 (OAC) + origin backend externo, behaviors API con cache deshabilitado / todos los métodos / query strings y headers forwarded (policy `AllViewerExceptHostHeader`), fallback SPA 403/404 → `/index.html` 200.
-- IAM OIDC provider para GitHub Actions (`create_github_oidc_provider=false` si ya existe en la cuenta — solo puede haber uno).
-- IAM role para deploy desde GitHub Actions con trust limitado a `tulio3101/DeliverAI` rama `develop` y política mínima: `s3:ListBucket`, `s3:PutObject`, `s3:DeleteObject`, `cloudfront:CreateInvalidation`.
+- Private S3 bucket (`<project_name>-<account_id>`), full public access block, ownership enforced, optional versioning.
+- CloudFront distribution: S3 origin (OAC) + external backend origin, API behaviors with caching disabled / all methods / query strings and headers forwarded (`AllViewerExceptHostHeader` policy), SPA fallback 403/404 → `/index.html` 200.
+- IAM OIDC provider for GitHub Actions (`create_github_oidc_provider=false` if it already exists in the account — there can only be one).
+- IAM role for GitHub Actions deploys with trust limited to `tulio3101/DeliverAI` branch `develop` and a minimal policy: `s3:ListBucket`, `s3:PutObject`, `s3:DeleteObject`, `cloudfront:CreateInvalidation`.
 
-> **Nota fallback SPA:** `custom_error_response` es global a la distribución; un 403/404 real del backend también se reescribe a `index.html` 200 para el caller. Documentado en `main.tf`.
+> **SPA fallback note:** `custom_error_response` is distribution-wide; a real backend 403/404 is also rewritten to `index.html` 200 for the caller. Documented in `main.tf`.
 
-## Autenticación
+## Authentication
 
-### Terraform local
+### Local Terraform
 
-Usa el credential chain estándar del provider AWS (env vars, `~/.aws/config`, SSO). Recomendado:
+Uses the AWS provider's standard credential chain (env vars, `~/.aws/config`, SSO). Recommended:
 
 ```bash
 export AWS_PROFILE=deliverai
 ```
 
-Nunca se guardan access keys en el repo. Estado Terraform es **local** (sin backend remoto): `*.tfstate`, `.terraform/` y `terraform.tfvars` están gitignored — no commitearlos.
+No access keys are ever stored in the repo. Terraform state is **local** (no remote backend): `*.tfstate`, `.terraform/` and `terraform.tfvars` are gitignored — do not commit them.
 
-### GitHub Actions (OIDC, sin keys)
+### GitHub Actions (OIDC, no keys)
 
-El workflow `frontend-deploy.yml` asume el role vía OIDC:
+The `frontend-deploy.yml` workflow assumes the role via OIDC:
 
 - `permissions: id-token: write, contents: read`
-- `aws-actions/configure-aws-credentials` con `role-to-assume: ${{ vars.AWS_ROLE_ARN }}`
-- Trust policy limitado a `repo:tulio3101/DeliverAI:ref:refs/heads/develop`
+- `aws-actions/configure-aws-credentials` with `role-to-assume: ${{ vars.AWS_ROLE_ARN }}`
+- Trust policy limited to `repo:tulio3101/DeliverAI:ref:refs/heads/develop`
 
-## GitHub Variables requeridas
+## Required GitHub Variables
 
-Configurar en Settings → Secrets and variables → Actions → **Variables** (los valores salen de `terraform output`, `init-setup.sh` los imprime):
+Configure in Settings → Secrets and variables → Actions → **Variables** (values come from `terraform output`; `init-setup.sh` prints them):
 
-| Variable | Valor |
+| Variable | Value |
 |---|---|
-| `AWS_REGION` | output `aws_region` (ej. `us-east-1`) |
+| `AWS_REGION` | output `aws_region` (e.g. `us-east-1`) |
 | `AWS_ROLE_ARN` | output `github_actions_deploy_role_arn` |
 | `S3_BUCKET` | output `s3_bucket_name` |
 | `CLOUDFRONT_DISTRIBUTION_ID` | output `cloudfront_distribution_id` |
-| `VITE_API_BASE_URL` | `https://<cloudfront_domain_name>` (API proxyada por CloudFront) o URL directa del backend |
+| `VITE_API_BASE_URL` | `https://<cloudfront_domain_name>` (API proxied by CloudFront) or the backend's direct URL |
 
-No se necesitan GitHub Secrets para AWS (OIDC reemplaza keys long-lived).
+No GitHub Secrets are needed for AWS (OIDC replaces long-lived keys).
 
-## Operación
+## Operations
 
-### Primera vez
+### First time
 
 ```bash
 cd infra/aws/frontend
-cp terraform.tfvars.example terraform.tfvars   # llenar backend_origin_domain real
+cp terraform.tfvars.example terraform.tfvars   # fill in the real backend_origin_domain
 AWS_PROFILE=deliverai ./scripts/init-setup.sh
 ```
 
-Valida credenciales (`aws sts get-caller-identity`), corre `terraform init/plan/apply` e imprime las GitHub Variables listas para copiar. Luego el primer deploy de assets: `./scripts/update-frontend.sh` o push a `develop`.
+Validates credentials (`aws sts get-caller-identity`), runs `terraform init/plan/apply` and prints the GitHub Variables ready to copy. Then run the first asset deploy: `./scripts/update-frontend.sh` or push to `develop`.
 
-### Actualizar infraestructura
+### Update infrastructure
 
 ```bash
-./scripts/update-infra.sh    # plan + confirmación + apply
+./scripts/update-infra.sh    # plan + confirmation + apply
 ```
 
-### Actualizar solo el frontend (sin Terraform)
+### Update only the frontend (no Terraform)
 
 ```bash
 ./scripts/update-frontend.sh
 ```
 
-Build (`VITE_MOCK_DATA=false`, `VITE_API_BASE_URL` del output o del env), `aws s3 sync ui-design/dist --delete`, invalidación CloudFront `/*`. Es lo mismo que hace el workflow en cada push a `develop`.
+Build (`VITE_MOCK_DATA=false`, `VITE_API_BASE_URL` from the output or the env), `aws s3 sync ui-design/dist --delete`, CloudFront `/*` invalidation. Same as what the workflow does on every push to `develop`.
 
-### Destruir demo
+### Destroy demo
 
 ```bash
 ./scripts/destroy-demo.sh
 ```
 
-**Irreversible.** Pide confirmación tipeada (nombre del bucket o `destroy`), vacía el bucket (incluyendo versiones) y corre `terraform destroy`. Elimina distribución, bucket, role IAM y (si lo creó este módulo) el OIDC provider.
+**Irreversible.** Requires typed confirmation (bucket name or `destroy`), empties the bucket (including versions) and runs `terraform destroy`. Deletes the distribution, bucket, IAM role and (if created by this module) the OIDC provider.
 
-### Rollback manual
+### Manual rollback
 
-No hay pipeline de rollback automático. Opciones:
+There is no automatic rollback pipeline. Options:
 
-1. **Redeploy de commit previo:** `git checkout <commit-bueno> -- ui-design` (o checkout del commit) y `./scripts/update-frontend.sh`, o re-run del workflow `frontend-deploy` desde ese commit (`workflow_dispatch`).
-2. **Resync de build previo:** si se conserva un `dist/` anterior (artifact local o de Actions), `aws s3 sync <dist-previo> s3://<bucket> --delete` + invalidación.
-3. Con `enable_bucket_versioning=true`, restaurar versiones previas de objetos también es posible.
+1. **Redeploy a previous commit:** `git checkout <good-commit> -- ui-design` (or checkout the commit) and `./scripts/update-frontend.sh`, or re-run the `frontend-deploy` workflow from that commit (`workflow_dispatch`).
+2. **Resync a previous build:** if a previous `dist/` is kept (local or Actions artifact), `aws s3 sync <previous-dist> s3://<bucket> --delete` + invalidation.
+3. With `enable_bucket_versioning=true`, restoring previous object versions is also possible.
 
-## Workflows relacionados
+## Related workflows
 
-- `.github/workflows/frontend-ci.yml`: checks (Biome, tsc, build) en PRs hacia `develop`. Sin credenciales AWS.
-- `.github/workflows/frontend-deploy.yml`: push a `develop` / manual → checks → build real → OIDC → sync S3 → invalidación CloudFront.
+- `.github/workflows/frontend-ci.yml`: checks (Biome, tsc, build) on PRs to `develop`. No AWS credentials.
+- `.github/workflows/frontend-deploy.yml`: push to `develop` / manual → checks → real build → OIDC → S3 sync → CloudFront invalidation.
