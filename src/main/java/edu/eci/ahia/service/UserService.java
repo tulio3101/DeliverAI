@@ -32,6 +32,18 @@ public class UserService {
   }
 
   @Transactional
+  public User findOrCreateByPhoneNumber(String name, Long phoneNumber) {
+
+    return userRepository.findByPhoneNumber(phoneNumber)
+        .orElseGet(() -> userRepository.save(
+            User.builder()
+                .name(name)
+                .phoneNumber(phoneNumber)
+                .build()));
+
+  }
+
+  @Transactional
   public User getUserById(Long id) {
 
     User userToGet = userRepository.findById(id)

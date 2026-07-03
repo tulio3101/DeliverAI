@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import edu.eci.ahia.model.entity.enums.State;
@@ -34,5 +35,14 @@ public class OrderResponseDTO {
 
   @Schema(description = "List of order items")
   private List<OrderItemResponseDTO> orderItems;
+
+  @Schema(description = "Delivery date", example = "2026-07-05")
+  private LocalDate deliveryDate;
+
+  @Schema(description = "Delivery address; empty if picked up in store")
+  private String deliveryAddress;
+
+  @Schema(description = "Additional notes for the order")
+  private String notes;
 
 }

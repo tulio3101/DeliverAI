@@ -64,6 +64,35 @@ class UserServiceTest {
     }
 
     @Test
+    void findOrCreateByPhoneNumber_WhenUserExists_ShouldReturnExisting() {
+        User existing = User.builder().id(1L).name("Alice").phoneNumber(1234567890L).build();
+
+        when(userRepository.findByPhoneNumber(1234567890L)).thenReturn(Optional.of(existing));
+
+        User result = userService.findOrCreateByPhoneNumber("Alice", 1234567890L);
+
+        assertEquals(existing, result);
+        verify(userRepository).findByPhoneNumber(1234567890L);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void findOrCreateByPhoneNumber_WhenUserDoesNotExist_ShouldCreateNew() {
+        User created = User.builder().id(2L).name("Bob").phoneNumber(9876543210L).build();
+
+        when(userRepository.findByPhoneNumber(9876543210L)).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenReturn(created);
+
+        User result = userService.findOrCreateByPhoneNumber("Bob", 9876543210L);
+
+        assertEquals(created, result);
+        verify(userRepository).findByPhoneNumber(9876543210L);
+        verify(userRepository).save(userCaptor.capture());
+        assertEquals("Bob", userCaptor.getValue().getName());
+        assertEquals(9876543210L, userCaptor.getValue().getPhoneNumber());
+    }
+
+    @Test
     void getUserById_WhenUserExists_ShouldReturnUser() {
         User existing = User.builder()
             .id(1L)

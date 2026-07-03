@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -42,4 +43,18 @@ public class OrderItem {
   @NotNull
   @Positive
   private int quantity;
+
+  @NotBlank
+  private String flavor;
+
+  @NotBlank
+  private String filling;
+
+  @Positive
+  private int servings;
+
+  @NotBlank
+  private String decoration;
+
+  private String referenceImageUrl;
 }

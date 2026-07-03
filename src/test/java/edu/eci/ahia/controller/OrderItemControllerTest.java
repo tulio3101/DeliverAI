@@ -41,6 +41,10 @@ class OrderItemControllerTest {
         OrderItemRequestDTO request = new OrderItemRequestDTO();
         request.setProductId(1L);
         request.setQuantity(3);
+        request.setFlavor("Chocolate");
+        request.setFilling("Arequipe");
+        request.setServings(10);
+        request.setDecoration("Gel de melocoton");
 
         Product product = Product.builder().id(1L).name("Pizza").units(10).price(25.99).build();
         OrderItem entity = OrderItem.builder().product(product).quantity(3).build();
@@ -55,7 +59,7 @@ class OrderItemControllerTest {
 
         mockMvc.perform(post("/order-items")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"productId\":1,\"quantity\":3}"))
+                .content("{\"productId\":1,\"quantity\":3,\"flavor\":\"Chocolate\",\"filling\":\"Arequipe\",\"servings\":10,\"decoration\":\"Gel de melocoton\"}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.quantity").value(3));
