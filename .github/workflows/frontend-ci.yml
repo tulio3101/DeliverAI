@@ -1,0 +1,58 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - 'ui-design/**'
+      - 'infra/aws/frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/frontend-deploy.yml'
+  push:
+    branches:
+      - infra/aws-deploy
+    paths:
+      - 'ui-design/**'
+      - 'infra/aws/frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/frontend-deploy.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: ui-design
+
+jobs:
+  checks:
+    name: Install, lint, type-check, build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js 22 (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: ui-design/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Biome check
+        run: pnpm check
+
+      - name: Type-check
+        run: pnpm type-check
+
+      - name: Build
+        run: pnpm build

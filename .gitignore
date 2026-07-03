@@ -35,3 +35,15 @@ build/
 ### Environment ###
 .env
 src/main/resources/application-local.properties
+
+### Terraform (local state only - no remote backend configured) ###
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan*
+crash.log
+crash.*.log
+terraform.tfvars
+*.auto.tfvars
+!terraform.tfvars.example

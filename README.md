@@ -7,192 +7,231 @@
 ![Maven](https://img.shields.io/badge/Maven-3.9-blue?logo=apachemaven)
 ![Spring Data JPA](https://img.shields.io/badge/JPA-Hibernate-6DB33F?logo=hibernate)
 ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3.0-green?logo=swagger)
-![MapStruct](https://img.shields.io/badge/MapStruct-1.5-purple)
-![Lombok](https://img.shields.io/badge/Lombok-1.18-red?logo=lombok)
-![JUnit](https://img.shields.io/badge/JUnit-5.11-blue?logo=junit5)
-![Mockito](https://img.shields.io/badge/Mockito-5.14-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwindcss&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-S3_+_CloudFront-FF9900?logo=amazonwebservices&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-Workflow_Automation-EA4AAA?logo=n8n&logoColor=white)
-![AI Agent](https://img.shields.io/badge/AI_Agent-n8n-8A2BE2?logo=n8n)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
 
 **DeliverAI** is an academic project developed for the course **Hyperautomation Architectures: Design, Implementation and Governance of AI Agents in Business Contexts** at the **Colombian School of Engineering Julio Garavito** (intersemester period 2026-I).
 
-The goal is to model and automate the complete ordering flow used by small and medium businesses (SMBs) when customers place delivery orders via WhatsApp. Think of a local bakery: you text the business on WhatsApp, interact with a person, and place your order. **DeliverAI automates the first contact phase** using AI agents, RPA, and MCPs orchestrated in **n8n**. Once the order is confirmed, an HTTP request hits the **REST API** to persist the data. A future **Admin UI** will give business owners full control over their products, orders, and live tracking.
+It automates the WhatsApp ordering flow for small and medium businesses: the customer texts the business, an AI agent orchestrated in **n8n** understands the order, confirms it and persists it through a **REST API**; the business owner manages it from the **Admin UI**.
+
+<div align="center">
+
+![DeliverAI system architecture](media/architecture-diagram.png)
+
+</div>
 
 ---
 
-## 📖 Overview
+## 📌 Current state vs target
 
-```
-Customer (WhatsApp)  →  n8n (Agents / RPA / MCPs)  →  REST API  →  Database
-                                                             ↘  Admin UI (future)
-```
+| Component | Status | Where it runs |
+|---|---|---|
+| **REST API** (Spring Boot) | ✅ Implemented in `src/` | Deployed **externally** on Azure Web App |
+| **PostgreSQL** | ✅ Operational | Next to the backend (Docker Compose locally) |
+| **Admin UI** (React) | ✅ Implemented in `ui-design/` | Deployed on **AWS S3 + CloudFront** |
+| **Frontend infra** (Terraform) | ✅ Implemented in `infra/aws/frontend/` | Applied in AWS `us-east-1` |
+| **Frontend CI/CD** | ✅ GitHub Actions + OIDC | GitHub |
+| **n8n workflow + AI agent** | ⚠️ **External** — runs outside the repo; JSON export pending in `n8n/` | External n8n instance |
+| **WhatsApp Business** | ⚠️ External/pending documentation in repo | Meta / external n8n |
+| **Push notifications (SSE/WS)** | ❌ Pending — MVP uses REST polling | — |
 
-DeliverAI bridges the gap between conversational AI and order management:
-
-- **WhatsApp Automation** — AI agents understand customer requests, suggest products, confirm quantities, and validate the order — all through natural conversation.
-- **Order Engine** — Once confirmed, the order is sent to a Spring Boot REST API that handles CRUD for products, orders, and order items with proper validation and error handling.
-- **Business Dashboard** *(coming soon)* — A web interface for business owners to manage inventory, view incoming orders, and update order statuses.
-
----
-
-## 🏗️ Architecture
-
-The system is split into three modules:
-
-| Module | Status | Description |
-|--------|--------|-------------|
-| **n8n Automation** | ⚠️ Coming soon | WhatsApp integration layer using AI agents, RPA bots, and MCP servers. Workflow exports will live in `n8n/`. |
-| **REST API** | ✅ Complete | Spring Boot backend — handles products, orders, and order items. Full Swagger documentation. |
-| **Admin UI** | ⚠️ Coming soon | Administrative dashboard for business owners. Design specs will live in `ui-design/`. |
-
-*Architecture diagram coming soon.*
-
-### Data Flow
-
-1. Customer sends a WhatsApp message to the business number.
-2. n8n workflow receives the message and uses an **AI agent** to interpret the request.
-3. The agent interacts with the customer via RPA/MCP to clarify items, quantities, and confirm the order.
-4. On confirmation, n8n sends an HTTP POST to the REST API with the order data.
-5. The API validates, persists, and returns the created order.
-6. The business owner can later manage orders through the Admin UI.
+> The frontend supports **mock mode** (`VITE_MOCK_DATA=true`, demo data without a backend) and **real API mode**.
 
 ---
 
-## ⚙️ Tech Stack
+## 🏗️ System architecture (System Context)
 
-| Technology | Purpose |
-|------------|---------|
-| **Java 21** | Language |
-| **Spring Boot 3.4** | Framework |
-| **Maven 3.9** | Build tool |
-| **Spring Data JPA / Hibernate** | ORM & persistence |
+```mermaid
+flowchart LR
+    C["Customer<br/>WhatsApp"] -->|messages| WA["WhatsApp Business"]
+    OP["Operator /<br/>business owner"] -->|HTTPS| CF["CloudFront + S3<br/>AWS us-east-1"]
 
-| **Lombok** | Boilerplate reduction |
-| **MapStruct 1.5** | Object mapping (Entity ↔ DTO) |
-| **SpringDoc OpenAPI (Swagger)** | API documentation |
-| **JUnit 5 + Mockito** | Unit testing |
-| **Jakarta Validation** | Request validation |
-| **n8n** *(future)* | Workflow automation |
-| **React** *(future)* | Admin UI |
+    subgraph EXT["External services"]
+        WA --> N8N["n8n workflow +<br/>AI agent - external"]
+        N8N -.->|inference| LLM["LLM provider"]
+    end
 
----
+    subgraph AZ["Azure"]
+        API["DeliverAI API<br/>Spring Boot 3.4 / Java 21"]
+        DB[("PostgreSQL")]
+        API --> DB
+    end
 
-## 📦 REST API (Backend)
-
-The API follows a layered architecture:
-
-```
-Controller  →  Service  →  Repository  →  Database
-     ↕
-   Mapper
-     ↕
-    DTO
+    N8N -->|"HTTP REST"| API
+    CF -->|"static SPA"| OP
+    CF -->|"proxy /order* /products* /user* /v3/*"| API
 ```
 
-### Project Structure
+The **Admin UI** calls the API through CloudFront (same origin → no CORS or mixed content). The conversational flow (WhatsApp → n8n → LLM) runs **outside this repo**; its JSON export is pending in `n8n/`.
 
-```
-src/main/java/edu/eci/ahia/
-├── DeliverAiApplication.java          # Entry point
-├── config/
-│   ├── CorsConfig.java                # CORS configuration
-│   └── SwaggerConfig.java             # OpenAPI documentation setup
-├── controller/
-│   ├── OrderController.java           # Order endpoints
-│   ├── OrderItemController.java       # Order item endpoints
-│   ├── ProductController.java         # Product endpoints
-│   └── UserController.java            # User endpoints
-├── exception/
-│   ├── GlobalExceptionHandler.java    # Centralized error handling
-│   ├── InsufficientStockException.java
-│   ├── OrderItemNotFoundException.java
-│   ├── OrderNotFoundException.java
-│   ├── ProductNotFoundException.java
-│   └── UserNotFoundException.java
-├── mapper/
-│   ├── OrderItemMapper.java
-│   ├── OrderMapper.java
-│   ├── ProductMapper.java
-│   └── UserMapper.java
-├── model/
-│   ├── dto/request/                   # Request DTOs
-│   │   ├── OrderItemRequestDTO.java
-│   │   ├── OrderRequestDTO.java
-│   │   ├── ProductRequestDTO.java
-│   │   └── UserRequestDTO.java
-│   ├── dto/response/                  # Response DTOs
-│   │   ├── OrderItemResponseDTO.java
-│   │   ├── OrderResponseDTO.java
-│   │   ├── ProductResponseDTO.java
-│   │   └── UserResponseDTO.java
-│   └── entity/
-│       ├── Order.java
-│       ├── OrderItem.java
-│       ├── Product.java
-│       ├── User.java
-│       └── enums/State.java
-├── repository/
-│   ├── OrderItemRepository.java
-│   ├── OrderRepository.java
-│   ├── ProductRepository.java
-│   └── UserRepository.java
-└── service/
-    ├── OrderItemService.java
-    ├── OrderService.java
-    ├── ProductService.java
-    └── UserService.java
+### Containers (C4 Container)
+
+```mermaid
+flowchart TB
+    subgraph AWS["AWS us-east-1"]
+        S3["Private S3 bucket<br/>static assets"]
+        CFD["CloudFront distribution<br/>HTTPS + CDN + SPA fallback"]
+        CFD -->|"OAC SigV4"| S3
+    end
+
+    subgraph Azure["Azure Web App"]
+        SPRING["Spring Boot API<br/>Controller-Service-Repository"]
+        PG[("PostgreSQL 16")]
+        SPRING --> PG
+    end
+
+    subgraph External["External n8n platform"]
+        WF["n8n workflow"]
+        AG["Conversational agent"]
+        WF --> AG
+    end
+
+    BROWSER["Operator's browser<br/>React SPA"] -->|HTTPS| CFD
+    CFD -->|"API behaviors<br/>cache disabled"| SPRING
+    BROWSER -.->|"polling every 10s<br/>GET /order/state"| CFD
+    AG -.->|LLM| PROV["Model provider"]
+    WF -->|"POST /order, /user"| SPRING
 ```
 
 ---
 
-## 🔌 n8n Module
+## 🔄 End-to-end order flow
 
-> ⚠️ **Coming soon** — Not included in this branch.
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant WA as WhatsApp Business
+    participant N8N as n8n + AI agent (external)
+    participant API as DeliverAI API (Azure)
+    participant DB as PostgreSQL
+    participant UI as Admin UI (CloudFront)
+    actor Operator
 
-This module will contain the WhatsApp automation layer using **AI agents**, **RPA bots**, and **MCP servers** orchestrated in **n8n**. Workflow JSON exports and configuration files will be stored in the [`n8n/`](n8n/) directory.
+    Customer->>WA: "I want 2 chocolate cakes"
+    WA->>N8N: inbound message webhook
+    N8N->>N8N: agent interprets intent (LLM)
+    N8N->>Customer: clarifying questions + summary
+    Customer->>N8N: explicit confirmation
+    N8N->>API: POST /order (confirmed items)
+    API->>DB: persist order + reduce stock
+    API-->>N8N: 201 order created (IN_CONFIRMATION)
+    N8N-->>Customer: order confirmation
+    loop every 10s
+        UI->>API: GET /order/state (via CloudFront)
+        API-->>UI: current orders
+    end
+    UI->>Operator: toast "New order #id"
+    Operator->>UI: change state (PREPARATION → COMPLETED)
+    UI->>API: PATCH /order/{id}?state=
+```
 
-The n8n workflows will handle:
-- Incoming WhatsApp message parsing
-- AI agent conversation with the customer (product selection, quantity, address, etc.)
-- Order confirmation flow
-- HTTP request to the REST API to persist confirmed orders
+Order states: `IN_CONFIRMATION` → `PREPARATION` → `COMPLETED`.
 
 ---
 
-## 🖥️ Admin UI
+## 📦 Monorepo modules
 
-> ⚠️ **Coming soon** — Not included in this branch.
+| Path | Module | Status |
+|---|---|---|
+| `src/` | Spring Boot REST API (Java 21, Maven) | ✅ Complete |
+| `ui-design/` | Admin UI React 19 + Vite + Tailwind 4 + shadcn/ui | ✅ Complete (MVP) |
+| `infra/aws/frontend/` | Terraform: S3, CloudFront, IAM OIDC + operational scripts | ✅ Applied |
+| `.github/workflows/` | Backend (Azure) and frontend (AWS) CI/CD | ✅ Active |
+| `n8n/` | n8n workflow exports | ⚠️ Pending (runs externally) |
+| `docker-compose.yml` | Local API + PostgreSQL | ✅ |
 
-An administrative dashboard that allows business owners to:
-- View incoming orders in real time
-- Manage product catalog (add, edit, delete products)
-- Update order statuses (confirm, prepare, complete, deliver)
-- Track order history
+## ⚙️ Tech stack
 
-Design assets and specifications will be stored in the [`ui-design/`](ui-design/) directory.
+| Layer | Technology | Purpose |
+|---|---|---|
+| Backend | Java 21, Spring Boot 3.4, Spring Data JPA/Hibernate | REST API and persistence |
+| Backend | MapStruct, Lombok, Jakarta Validation, SpringDoc OpenAPI | Mapping, DTOs, docs |
+| Backend | JUnit 5 + Mockito | Unit tests |
+| Data | PostgreSQL 16 | Operational store |
+| Frontend | React 19, Vite 8, TypeScript, Tailwind CSS 4, shadcn/ui, Biome | Admin UI |
+| Automation | n8n + LLM agent *(external)* | WhatsApp conversation |
+| Infra | Terraform, AWS S3 + CloudFront + IAM OIDC | Frontend static hosting |
+| CI/CD | GitHub Actions | Checks + deploys |
 
 ---
 
-## 🧪 Testing
+## 📡 API — main endpoints
 
-The project includes unit tests for controllers and services using **JUnit 5** and **Mockito**:
+Full inventory in Swagger: `/swagger-ui.html` · OpenAPI: `/v3/api-docs`.
 
+| Resource | Endpoints | Note |
+|---|---|---|
+| Products | `POST /products`, `PATCH /products/{id}/price`, `PATCH /products/{id}/units`, `DELETE /products/{id}` | ⚠️ **No list GET endpoint** (known gap) |
+| Orders | `POST /order`, `GET /order/{id}`, `GET /order/user/{userId}`, `GET /order/state?state=`, `PATCH /order/{id}?state=`, `DELETE /order/{id}` | No global `GET /order`; the UI composes it with 3 per-state calls |
+| Order Items | `POST /order-items`, `DELETE /order-items/{id}` | |
+| Users | `POST /user`, `GET /user/{id}`, `GET /user/all`, `PUT /user/{id}`, `DELETE /user/{id}` | |
+
+---
+
+## ☁️ Frontend-only deploy on AWS
+
+Only the **frontend** lives on AWS. Backend/n8n remain external.
+
+- **Private S3**: hosts `ui-design/dist` (Vite build). No public access; CloudFront reads via Origin Access Control.
+- **CloudFront**: HTTPS, global CDN, SPA fallback (403/404 → `index.html`) and **API proxy** — backend paths are routed to the external origin, avoiding CORS.
+- **Vite build-time variables**: `VITE_MOCK_DATA` and `VITE_API_BASE_URL` are injected during `pnpm build` (they do not exist at runtime; see [`ui-design/README.md`](ui-design/README.md)).
+- Full rationale (why not EC2/ECS/ECR, region, costs): [`infra/aws/frontend/README.md`](infra/aws/frontend/README.md).
+
+### Deployment diagram
+
+```mermaid
+flowchart LR
+    DEV["Developer<br/>push to develop"] --> GHA["GitHub Actions<br/>frontend-deploy.yml"]
+    GHA -->|"OIDC role<br/>no AWS keys"| IAM["IAM role<br/>minimal deploy"]
+    GHA -->|"pnpm build<br/>VITE_* injected"| DIST["ui-design/dist"]
+    DIST -->|"aws s3 sync"| S3["Private S3"]
+    GHA -->|invalidation| CF["CloudFront"]
+    CF -->|OAC| S3
+    CF -->|"API proxy"| BE["External backend<br/>Azure Web App"]
+    U["Browser"] -->|HTTPS| CF
 ```
-src/test/java/edu/eci/ahia/
-├── controller/
-│   ├── OrderControllerTest.java
-│   ├── OrderItemControllerTest.java
-│   └── ProductControllerTest.java
-└── service/
-    ├── OrderServiceTest.java
-    ├── OrderItemServiceTest.java
-    └── ProductServiceTest.java
+
+## 🔔 Notifications (MVP)
+
+- **Today:** the Admin UI does **REST polling** every 10s against `GET /order/state` and shows toasts for new orders or state changes. No extra infrastructure.
+- **Possible future:** SSE or WebSocket if the backend exposes them; polling would be replaced inside a single hook (`use-order-notifications.ts`).
+
+---
+
+## 🚀 Local quick start
+
+### Backend + DB (Docker Compose)
+
+```bash
+docker-compose up --build
+# API at http://localhost:8080 · Swagger at /swagger-ui.html
 ```
 
-Run tests with:
+### Backend without Docker (in-memory H2)
+
+```bash
+mvn clean install
+mvn spring-boot:run -Dspring.profiles.active=h2
+```
+
+### Frontend
+
+```bash
+cd ui-design
+pnpm install
+pnpm dev          # http://localhost:5173 (mock mode by default)
+```
+
+Real API mode and other frontend operations: [`ui-design/README.md`](ui-design/README.md).
+
+### Backend tests
 
 ```bash
 mvn test
@@ -200,108 +239,43 @@ mvn test
 
 ---
 
-## 🚀 Quick Start
+## 🔁 CI/CD
 
-### Prerequisites
-
-- **JDK 21** — [Download](https://jdk.java.net/21/)
-- **Maven 3.9+** — [Download](https://maven.apache.org/download.cgi)
-- **Docker & Docker Compose** — [Download](https://docs.docker.com/get-docker/) (optional, for PostgreSQL)
-
-### Run with Docker (recommended)
-
-```bash
-# Clone the repository
-git clone https://github.com/tulio3101/DeliverAI.git
-cd DeliverAI
-
-# Build and run with PostgreSQL (app + database)
-docker-compose up --build
+```mermaid
+flowchart LR
+    PR["PR to develop"] --> CI["frontend-ci.yml<br/>biome + tsc + build"]
+    PR --> BCI["pipeline.yml<br/>maven build + test"]
+    MERGE["push / merge<br/>to develop"] --> DEPLOY["frontend-deploy.yml<br/>checks → build → S3 sync<br/>→ CloudFront invalidation"]
+    MERGE --> BDEPLOY["pipeline.yml<br/>deploy jar to Azure"]
+    DEPLOY -->|OIDC| AWS["AWS"]
+    BDEPLOY -->|credentials| AZ["Azure"]
 ```
 
-### Run locally (without Docker)
-
-For local development without PostgreSQL, use the H2 in-memory profile:
-
-```bash
-# Build the project
-mvn clean install
-
-# Run with H2 database
-mvn spring-boot:run -Dspring.profiles.active=h2
-```
-
-The API will be available at `http://localhost:8080`.
-
-### Swagger UI
-
-Once the application is running, access the interactive API documentation:
-
-```
-http://localhost:8080/swagger-ui.html
-```
-
-The OpenAPI JSON spec is available at:
-
-```
-http://localhost:8080/v3/api-docs
-```
+| Workflow | Trigger | Does |
+|---|---|---|
+| `pipeline.yml` | PR/push `main`/`develop` | Maven build, tests, deploy jar to Azure Web App |
+| `frontend-ci.yml` | PR to `develop` (frontend paths) | `pnpm check` + `type-check` + `build` — no AWS |
+| `frontend-deploy.yml` | Push to `develop` / manual | Checks → real build → OIDC → S3 sync → invalidation |
 
 ---
 
-## 📡 API Endpoints
+## ⚠️ Known risks and gaps
 
-### Products
+| Gap | Impact | Mitigation |
+|---|---|---|
+| No `GET /products` (list) | Agent/UI cannot list the catalog from the API | UI surfaces the gap; endpoint pending in backend |
+| `OrderRequestDTO` lacks `userId` | Orders end up with no associated user | Documented; requires backend DTO change |
+| n8n export not versioned in repo | Workflow not reproducible from the repo | `n8n/` reserved; JSON export pending |
+| Global SPA fallback 403/404 | A real backend 403/404 through CloudFront returns `index.html` 200 | Documented in `infra/aws/frontend/main.tf` |
+| 10s polling | Notification latency up to 10s + light API load | Acceptable for MVP; SSE/WS in the future |
+| Local Terraform state | One infra operator at a time | Remote backend (S3 + lock) if the team grows |
 
-| Method | Path | Body | Description |
-|--------|------|------|-------------|
-| `POST` | `/products` | `ProductRequestDTO` | Create a new product |
-| `PATCH` | `/products/{id}/price` | `?price=...` | Update product price |
-| `PATCH` | `/products/{id}/units` | `?units=...` | Update product stock |
-| `DELETE` | `/products/{id}` | — | Delete a product |
+---
 
-**ProductRequestDTO:**
-```json
-{ "name": "Chocolate Cake", "units": 10, "price": 25.00 }
-```
+## 📐 Visual diagram
 
-### Orders
-
-| Method | Path | Body/Params | Description |
-|--------|------|-------------|-------------|
-| `POST` | `/order` | `OrderRequestDTO` | Create a new order |
-| `PATCH` | `/order/{id}` | `?state=...` | Update order state |
-| `DELETE` | `/order/{id}` | — | Delete an order |
-| `GET` | `/order/{id}` | — | Get order by ID |
-| `GET` | `/order/user/{userId}` | — | Get orders by user |
-| `GET` | `/order/state` | `?state=...` | Get orders by state |
-
-**OrderRequestDTO:**
-```json
-{
-  "subTotal": 50.00,
-  "orderItems": [
-    { "productId": 1, "quantity": 2 }
-  ]
-}
-```
-
-### Order Items
-
-| Method | Path | Body/Params | Description |
-|--------|------|-------------|-------------|
-| `POST` | `/order-items` | `OrderItemRequestDTO` | Add item to an order |
-| `DELETE` | `/order-items/{id}` | — | Remove item from an order |
-
-### Users
-
-| Method | Path | Body | Description |
-|--------|------|------|-------------|
-| `POST` | `/user` | `UserRequestDTO` | Create a new user |
-| `GET` | `/user/{id}` | — | Get user by ID |
-| `GET` | `/user/all` | — | Get all users |
-| `PUT` | `/user/{id}` | `UserRequestDTO` | Update a user |
-| `DELETE` | `/user/{id}` | — | Delete a user |
+- Image: [`media/architecture-diagram.png`](media/architecture-diagram.png) (embedded at the top of this README).
+- Editable source: [`docs/architecture/deliverai-system-architecture.excalidraw`](docs/architecture/deliverai-system-architecture.excalidraw) (open at [excalidraw.com](https://excalidraw.com) → File → Open).
 
 ---
 
@@ -313,8 +287,6 @@ http://localhost:8080/v3/api-docs
 - [David Alejandro Patacon Henao](https://github.com/AlejandroHenao2572)
 - [Manuel Alejandro Guarnizo](https://github.com/MAGG0059)
 
----
-
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+Licensed under the **MIT License** — see [LICENSE](LICENSE).

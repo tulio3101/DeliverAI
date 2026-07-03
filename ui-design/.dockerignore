@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml.tmp
+
+# Build output
+dist
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*.swn
+.DS_Store
+*.log
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+
+# Documentation
+README.md
+CHANGELOG.md
+
+# Testing
+.test
+.spec
+coverage
+
+# Other
+.npm
+.eslintcache
+.prettierignore
+.turbo
+dist-ssr
+*.tsbuildinfo
