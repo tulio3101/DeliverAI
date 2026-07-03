@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import edu.eci.ahia.exception.OrderNotFoundException;
 import edu.eci.ahia.model.entity.Order;
 import edu.eci.ahia.model.entity.OrderItem;
+import edu.eci.ahia.model.entity.Product;
+import edu.eci.ahia.model.entity.User;
 import edu.eci.ahia.model.entity.enums.State;
 import edu.eci.ahia.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,22 +22,38 @@ public class OrderService {
   private final OrderRepository orderRepository;
   private final OrderItemService orderItemService;
   private final ProductService productService;
+  private final UserService userService;
 
   @Transactional
   public Order createOrder(Order entity) {
+
+    User user = userService.findOrCreateByPhoneNumber(entity.getCustomerName(), entity.getPhoneNumber());
 
     Order newOrder = Order.builder()
         .orderDate(LocalDateTime.now())
         .state(State.IN_CONFIRMATION)
         .subTotal(entity.getSubTotal())
         .orderItems(entity.getOrderItems())
-        .user(entity.getUser())
+        .user(user)
+        .deliveryDate(entity.getDeliveryDate())
+        .deliveryAddress(entity.getDeliveryAddress())
+        .notes(entity.getNotes())
         .build();
 
     List<OrderItem> orderItems = newOrder.getOrderItems();
     if (orderItems != null) {
       orderItems.forEach(orderItem -> {
-        orderItem.setProduct(productService.findProductById(orderItem.getProductId()));
+        if (orderItem.getProductId() != null) {
+          orderItem.setProduct(productService.findProductById(orderItem.getProductId()));
+        } else {
+          Product customProduct = productService.createProduct(
+              Product.builder()
+                  .name("Pastel personalizado - " + orderItem.getFlavor())
+                  .units(orderItem.getQuantity())
+                  .price(0)
+                  .build());
+          orderItem.setProduct(customProduct);
+        }
         orderItem.setOrder(newOrder);
         orderItemService.reduceProductUnits(orderItem);
       });

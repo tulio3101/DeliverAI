@@ -42,13 +42,22 @@ class OrderControllerTest {
 
     @Test
     void createOrder_ShouldReturn201() throws Exception {
+        String deliveryDate = java.time.LocalDate.now().plusDays(3).toString();
+
         OrderItemRequestDTO itemRequest = new OrderItemRequestDTO();
         itemRequest.setProductId(1L);
         itemRequest.setQuantity(3);
+        itemRequest.setFlavor("Chocolate");
+        itemRequest.setFilling("Arequipe");
+        itemRequest.setServings(10);
+        itemRequest.setDecoration("Gel de melocoton");
 
         OrderRequestDTO request = new OrderRequestDTO();
         request.setSubTotal(77.97);
         request.setOrderItems(List.of(itemRequest));
+        request.setCustomerName("Juliana");
+        request.setPhoneNumber(573187063281L);
+        request.setDeliveryDate(java.time.LocalDate.parse(deliveryDate));
 
         Order entity = Order.builder().subTotal(77.97).build();
         Order saved = Order.builder()
@@ -69,7 +78,7 @@ class OrderControllerTest {
 
         mockMvc.perform(post("/order")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"subTotal\":77.97,\"orderItems\":[{\"productId\":1,\"quantity\":3}]}"))
+                .content("{\"subTotal\":77.97,\"customerName\":\"Juliana\",\"phoneNumber\":573187063281,\"deliveryDate\":\"" + deliveryDate + "\",\"orderItems\":[{\"productId\":1,\"quantity\":3,\"flavor\":\"Chocolate\",\"filling\":\"Arequipe\",\"servings\":10,\"decoration\":\"Gel de melocoton\"}]}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.subTotal").value(77.97));

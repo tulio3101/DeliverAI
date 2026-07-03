@@ -25,4 +25,19 @@ public class OrderItemResponseDTO {
 
   @Schema(description = "Product quantity", example = "2")
   private int quantity;
+
+  @Schema(description = "Cake flavor", example = "Chocolate")
+  private String flavor;
+
+  @Schema(description = "Cake filling", example = "Caramel (arequipe)")
+  private String filling;
+
+  @Schema(description = "Number of servings the cake yields", example = "10")
+  private int servings;
+
+  @Schema(description = "Cake decoration / design", example = "Peach gel with a Happy Birthday message")
+  private String decoration;
+
+  @Schema(description = "Reference image URL for the cake design")
+  private String referenceImageUrl;
 }

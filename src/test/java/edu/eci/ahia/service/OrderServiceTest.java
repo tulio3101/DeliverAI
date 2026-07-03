@@ -19,6 +19,7 @@ import edu.eci.ahia.exception.OrderNotFoundException;
 import edu.eci.ahia.model.entity.Order;
 import edu.eci.ahia.model.entity.OrderItem;
 import edu.eci.ahia.model.entity.Product;
+import edu.eci.ahia.model.entity.User;
 import edu.eci.ahia.model.entity.enums.State;
 import edu.eci.ahia.repository.OrderRepository;
 import edu.eci.ahia.service.ProductService;
@@ -35,6 +36,9 @@ class OrderServiceTest {
     @Mock
     private ProductService productService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -46,10 +50,13 @@ class OrderServiceTest {
         Product product = Product.builder().id(1L).build();
         OrderItem item1 = OrderItem.builder().product(product).productId(1L).quantity(3).build();
         OrderItem item2 = OrderItem.builder().product(product).productId(1L).quantity(2).build();
+        User user = User.builder().id(1L).name("Juliana").phoneNumber(53557023281L).build();
 
         Order input = Order.builder()
             .subTotal(100.0)
             .orderItems(List.of(item1, item2))
+            .customerName("Juliana")
+            .phoneNumber(53557023281L)
             .build();
 
         Order savedOrder = Order.builder()
@@ -58,8 +65,10 @@ class OrderServiceTest {
             .state(State.IN_CONFIRMATION)
             .subTotal(100.0)
             .orderItems(List.of(item1, item2))
+            .user(user)
             .build();
 
+        when(userService.findOrCreateByPhoneNumber("Juliana", 53557023281L)).thenReturn(user);
         when(productService.findProductById(1L)).thenReturn(product);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
@@ -75,6 +84,7 @@ class OrderServiceTest {
         assertEquals(State.IN_CONFIRMATION, captured.getState());
         assertEquals(100.0, captured.getSubTotal());
         assertNotNull(captured.getOrderDate());
+        assertEquals(user, captured.getUser());
 
         assertEquals(item1, captured.getOrderItems().get(0));
         assertEquals(item2, captured.getOrderItems().get(1));
@@ -84,6 +94,38 @@ class OrderServiceTest {
 
         assertSame(captured, item1.getOrder());
         assertSame(captured, item2.getOrder());
+    }
+
+    @Test
+    void createOrder_WithoutProductId_ShouldCreateCustomProductFromCakeFields() {
+        OrderItem item = OrderItem.builder().flavor("Chocolate").quantity(1).build();
+        User user = User.builder().id(2L).name("Camila").phoneNumber(573000000000L).build();
+        Product customProduct = Product.builder().id(5L).name("Pastel personalizado - Chocolate").units(1).price(0).build();
+
+        Order input = Order.builder()
+            .subTotal(0.0)
+            .orderItems(List.of(item))
+            .customerName("Camila")
+            .phoneNumber(573000000000L)
+            .build();
+
+        Order savedOrder = Order.builder()
+            .id(4L)
+            .state(State.IN_CONFIRMATION)
+            .orderItems(List.of(item))
+            .user(user)
+            .build();
+
+        when(userService.findOrCreateByPhoneNumber("Camila", 573000000000L)).thenReturn(user);
+        when(productService.createProduct(any(Product.class))).thenReturn(customProduct);
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+        orderService.createOrder(input);
+
+        verify(productService).createProduct(argThat(p ->
+            "Pastel personalizado - Chocolate".equals(p.getName()) && p.getUnits() == 1));
+        verify(productService, never()).findProductById(any());
+        assertEquals(customProduct, item.getProduct());
     }
 
     @Test
