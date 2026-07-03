@@ -68,9 +68,7 @@ export default function ProductsPage() {
             <CardTitle className="flex items-center gap-2">
               <Package className="size-4" aria-hidden="true" /> Catálogo
             </CardTitle>
-            <CardDescription>
-              El listado usa mock cuando el backend real no expone GET /products.
-            </CardDescription>
+            <CardDescription>Catálogo, precio, stock y creación de producto.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -108,19 +106,7 @@ export default function ProductsPage() {
               </div>
             )}
 
-            {!loading && error?.kind === "unsupported" && (
-              <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-                <Construction aria-hidden="true" />
-                <AlertTitle>Listado de productos no disponible en API real</AlertTitle>
-                <AlertDescription>
-                  El backend actual no expone un endpoint de listado de productos (GAP documentado).
-                  Las operaciones de crear, actualizar y eliminar sí funcionan contra la API real,
-                  pero el catálogo no puede mostrarse.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {!loading && error && error.kind !== "unsupported" && (
+            {!loading && error && (
               <Alert variant="destructive">
                 <Construction aria-hidden="true" />
                 <AlertTitle>No se pudieron cargar los productos</AlertTitle>

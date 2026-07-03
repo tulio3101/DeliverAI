@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -37,6 +38,22 @@ class ProductControllerTest {
 
     @MockitoBean
     private ProductMapper productMapper;
+
+    @Test
+    void getAllProducts_ShouldReturn200() throws Exception {
+        Product entity = Product.builder().id(1L).name("Pizza").units(10).price(25.99).build();
+        ProductResponseDTO response = ProductResponseDTO.builder()
+            .id(1L).name("Pizza").units(10).price(25.99).build();
+
+        when(productService.getAllProducts()).thenReturn(java.util.List.of(entity));
+        when(productMapper.toDtoList(java.util.List.of(entity)))
+            .thenReturn(java.util.List.of(response));
+
+        mockMvc.perform(get("/products"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].name").value("Pizza"));
+    }
 
     @Test
     void createProduct_ShouldReturn201() throws Exception {

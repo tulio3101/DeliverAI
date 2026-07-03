@@ -95,8 +95,14 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <ul className="flex flex-col gap-2 text-muted-foreground">
-                  <li>Catálogo de productos sin endpoint de listado en backend.</li>
-                  <li>Workflow n8n/WhatsApp no implementado.</li>
+                  <li>
+                    Estados de pedido limitados a 3 (backend): confirmación, preparación,
+                    completado.
+                  </li>
+                  <li>
+                    Pedidos del agente llegan sin tarifar (subtotal en 0 hasta que el admin fija
+                    precio).
+                  </li>
                   {MOCK_DATA && <li>Modo demo activo: datos locales no reales.</li>}
                 </ul>
               </CardContent>
