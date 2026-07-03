@@ -47,3 +47,5 @@ crash.*.log
 terraform.tfvars
 *.auto.tfvars
 !terraform.tfvars.example
+
+CLAUDE.md

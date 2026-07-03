@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,8 +20,8 @@ import java.util.List;
 @Schema(description = "Request to create an order")
 public class OrderRequestDTO {
 
-    @Positive
-    @Schema(description = "Order subtotal", example = "150.00")
+    @PositiveOrZero
+    @Schema(description = "Order subtotal; 0 for draft orders the agent creates without pricing", example = "150.00")
     private double subTotal;
 
     @NotEmpty

@@ -85,6 +85,25 @@ class OrderControllerTest {
     }
 
     @Test
+    void createOrder_WithZeroSubTotal_ShouldReturn201() throws Exception {
+        // Draft orders from the WhatsApp agent carry subTotal 0 (no pricing yet); must be accepted.
+        String deliveryDate = java.time.LocalDate.now().plusDays(3).toString();
+
+        Order saved = Order.builder().id(2L).subTotal(0).state(State.IN_CONFIRMATION).build();
+        OrderResponseDTO response = OrderResponseDTO.builder().id(2L).subTotal(0).state(State.IN_CONFIRMATION).build();
+
+        when(orderMapper.toEntity(any(OrderRequestDTO.class))).thenReturn(Order.builder().build());
+        when(orderService.createOrder(any(Order.class))).thenReturn(saved);
+        when(orderMapper.toDto(saved)).thenReturn(response);
+
+        mockMvc.perform(post("/order")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"subTotal\":0,\"customerName\":\"Alejandro\",\"phoneNumber\":573226354883,\"deliveryDate\":\"" + deliveryDate + "\",\"orderItems\":[{\"quantity\":1,\"flavor\":\"maracuya\",\"filling\":\"crema\",\"servings\":10,\"decoration\":\"cumpleanos\"}]}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.subTotal").value(0));
+    }
+
+    @Test
     void createOrder_WithEmptyBody_ShouldReturn400() throws Exception {
         mockMvc.perform(post("/order")
                 .contentType(MediaType.APPLICATION_JSON)
