@@ -21,11 +21,11 @@
 
 It automates the WhatsApp ordering flow for small and medium businesses: the customer texts the business, an AI agent orchestrated in **n8n** understands the order, confirms it and persists it through a **REST API**; the business owner manages it from the **Admin UI**.
 
-```
-Customer (WhatsApp) → n8n (AI Agent) → REST API → PostgreSQL
-                                            ↑
-                              Admin UI (React) — operator
-```
+<div align="center">
+
+![DeliverAI system architecture](media/architecture-diagram.png)
+
+</div>
 
 ---
 
@@ -274,7 +274,8 @@ flowchart LR
 
 ## 📐 Visual diagram
 
-Editable system architecture diagram: [`docs/architecture/deliverai-system-architecture.excalidraw`](docs/architecture/deliverai-system-architecture.excalidraw) (open at [excalidraw.com](https://excalidraw.com) → File → Open).
+- Image: [`media/architecture-diagram.png`](media/architecture-diagram.png) (embedded at the top of this README).
+- Editable source: [`docs/architecture/deliverai-system-architecture.excalidraw`](docs/architecture/deliverai-system-architecture.excalidraw) (open at [excalidraw.com](https://excalidraw.com) → File → Open).
 
 ---
 
