@@ -50,13 +50,13 @@ class OrderServiceTest {
         Product product = Product.builder().id(1L).build();
         OrderItem item1 = OrderItem.builder().product(product).productId(1L).quantity(3).build();
         OrderItem item2 = OrderItem.builder().product(product).productId(1L).quantity(2).build();
-        User user = User.builder().id(1L).name("Juliana").phoneNumber(573187063281L).build();
+        User user = User.builder().id(1L).name("Juliana").phoneNumber(53557023281L).build();
 
         Order input = Order.builder()
             .subTotal(100.0)
             .orderItems(List.of(item1, item2))
             .customerName("Juliana")
-            .phoneNumber(573187063281L)
+            .phoneNumber(53557023281L)
             .build();
 
         Order savedOrder = Order.builder()
@@ -68,7 +68,7 @@ class OrderServiceTest {
             .user(user)
             .build();
 
-        when(userService.findOrCreateByPhoneNumber("Juliana", 573187063281L)).thenReturn(user);
+        when(userService.findOrCreateByPhoneNumber("Juliana", 53557023281L)).thenReturn(user);
         when(productService.findProductById(1L)).thenReturn(product);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
