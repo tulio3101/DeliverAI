@@ -9,6 +9,14 @@ on:
       - 'infra/aws/frontend/**'
       - '.github/workflows/frontend-ci.yml'
       - '.github/workflows/frontend-deploy.yml'
+  push:
+    branches:
+      - infra/aws-deploy
+    paths:
+      - 'ui-design/**'
+      - 'infra/aws/frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/frontend-deploy.yml'
 
 permissions:
   contents: read
