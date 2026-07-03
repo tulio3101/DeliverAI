@@ -1,7 +1,7 @@
 import type { DataAdapter } from "@/lib/api/data-adapter";
 import { http } from "@/lib/api/http";
 import {
-  ApiError,
+  ORDER_STATES,
   type Order,
   type OrderCreateInput,
   type OrderState,
@@ -13,22 +13,14 @@ import {
 
 /**
  * Adapter contra el backend Spring real.
- * Endpoints según project/api-inventory.md del harness — no inventar rutas.
- *
- * Gap conocido del backend actual: NO existe GET de listado de productos.
- * listProducts lanza ApiError("unsupported") y la UI debe mostrar el gap.
+ * Endpoints según los controllers de src/main/java/edu/eci/ahia/controller — no inventar rutas.
  */
 export const backendAdapter: DataAdapter = {
   mode: "api",
 
   // ── Products ──
   listProducts(): Promise<Product[]> {
-    return Promise.reject(
-      new ApiError(
-        "unsupported",
-        "El backend actual no expone GET /products (listado). Gap documentado en el harness.",
-      ),
-    );
+    return http<Product[]>("/products");
   },
   createProduct(input: ProductCreateInput): Promise<Product> {
     return http<Product>("/products", { method: "POST", body: input });
@@ -45,10 +37,9 @@ export const backendAdapter: DataAdapter = {
 
   // ── Orders ──
   async listOrders(): Promise<Order[]> {
-    // No hay GET /order (todas); se compone desde los 3 estados soportados.
-    const states: OrderState[] = ["IN_CONFIRMATION", "PREPARATION", "COMPLETED"];
+    // No hay GET /order (todas); se compone desde todos los estados soportados.
     const results = await Promise.all(
-      states.map((state) => http<Order[]>("/order/state", { params: { state } })),
+      ORDER_STATES.map((state) => http<Order[]>("/order/state", { params: { state } })),
     );
     return results.flat();
   },

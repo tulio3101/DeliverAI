@@ -19,6 +19,16 @@ export function formatDateTime(iso: string): string {
   });
 }
 
+export function formatDate(isoDate: string): string {
+  // isoDate = "YYYY-MM-DD" (LocalDate). Se ancla a medianoche local para evitar
+  // que el parse en UTC muestre el día anterior.
+  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("es-CO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function formatRelative(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60_000);

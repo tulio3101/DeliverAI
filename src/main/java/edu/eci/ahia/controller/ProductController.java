@@ -2,7 +2,10 @@ package edu.eci.ahia.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import java.util.List;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +38,16 @@ public class ProductController {
     private final ProductService productService;
     private final ProductMapper productMapper;
 
+
+    @GetMapping("")
+    @Operation(summary = "List products", description = "Returns the full product catalog")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "List of products",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponseDTO.class)))
+    })
+    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
+        return ResponseEntity.ok(productMapper.toDtoList(productService.getAllProducts()));
+    }
 
     @PostMapping("")
     @Operation(summary = "Create a product", description = "Creates a new product in the inventory")

@@ -1,5 +1,7 @@
 package edu.eci.ahia.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import edu.eci.ahia.repository.ProductRepository;
@@ -13,6 +15,11 @@ import lombok.RequiredArgsConstructor;
 public class ProductService {
 
     private final ProductRepository productRepository;
+
+    @Transactional
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
 
     @Transactional
     public Product findProductById(Long id) {

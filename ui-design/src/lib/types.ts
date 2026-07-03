@@ -1,13 +1,33 @@
 // Tipos alineados con los DTOs reales del backend Spring Boot (DeliverAI).
 // Fuente: src/main/java/edu/eci/ahia/model/dto — no inventar campos.
 
-export type OrderState = "IN_CONFIRMATION" | "PREPARATION" | "COMPLETED";
+export type OrderState =
+  | "IN_CONFIRMATION"
+  | "PENDING_PAYMENT"
+  | "PAID"
+  | "PREPARATION"
+  | "SHIPPED"
+  | "READY_FOR_PICKUP"
+  | "COMPLETED";
 
-export const ORDER_STATES: OrderState[] = ["IN_CONFIRMATION", "PREPARATION", "COMPLETED"];
+// Orden lógico del flujo para la UI (el backend guarda ORDINAL en otro orden).
+export const ORDER_STATES: OrderState[] = [
+  "IN_CONFIRMATION",
+  "PENDING_PAYMENT",
+  "PAID",
+  "PREPARATION",
+  "SHIPPED",
+  "READY_FOR_PICKUP",
+  "COMPLETED",
+];
 
 export const ORDER_STATE_LABELS: Record<OrderState, string> = {
-  IN_CONFIRMATION: "En confirmación",
+  IN_CONFIRMATION: "Ordenado",
+  PENDING_PAYMENT: "Por pagar",
+  PAID: "Pagado",
   PREPARATION: "En preparación",
+  SHIPPED: "Enviado",
+  READY_FOR_PICKUP: "Listo para recoger",
   COMPLETED: "Completado",
 };
 
@@ -41,6 +61,13 @@ export interface OrderItem {
   id: number;
   product: Product;
   quantity: number;
+  // Detalle del pastel capturado por el agente. Opcional: el backend real los
+  // devuelve; los datos demo (mock) no los incluyen.
+  flavor?: string;
+  filling?: string;
+  servings?: number;
+  decoration?: string;
+  referenceImageUrl?: string | null;
 }
 
 export interface Order {
@@ -50,6 +77,10 @@ export interface Order {
   subTotal: number;
   user: User | null;
   orderItems: OrderItem[];
+  // Entrega y notas capturadas por el agente (backend real; ausentes en mock).
+  deliveryDate?: string; // ISO LocalDate
+  deliveryAddress?: string | null;
+  notes?: string | null;
 }
 
 export interface OrderItemInput {

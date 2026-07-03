@@ -20,6 +20,7 @@ import { api } from "@/lib/api";
 import { MOCK_DATA } from "@/lib/config";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { Order, OrderState } from "@/lib/types";
+import { ORDER_STATE_LABELS, ORDER_STATES } from "@/lib/types";
 import { OrderDetailSheet } from "@/pages/orders/order-detail-sheet";
 import { StateBadge } from "@/pages/orders/state-badge";
 
@@ -27,9 +28,7 @@ type TabValue = "all" | OrderState;
 
 const TABS: Array<{ value: TabValue; label: string }> = [
   { value: "all", label: "Todos" },
-  { value: "IN_CONFIRMATION", label: "Confirmación" },
-  { value: "PREPARATION", label: "Preparación" },
-  { value: "COMPLETED", label: "Completados" },
+  ...ORDER_STATES.map((state) => ({ value: state, label: ORDER_STATE_LABELS[state] })),
 ];
 
 const SKELETON_ROWS = ["a", "b", "c", "d", "e"];

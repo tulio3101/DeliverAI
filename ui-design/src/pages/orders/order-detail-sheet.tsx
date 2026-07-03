@@ -25,7 +25,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
-import { formatDateTime, formatMoney } from "@/lib/format";
+import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import type { Order, OrderState } from "@/lib/types";
 import { ORDER_STATE_LABELS, ORDER_STATES } from "@/lib/types";
 import { StateBadge } from "@/pages/orders/state-badge";
@@ -137,20 +137,67 @@ export function OrderDetailSheet({ order, open, onOpenChange, onChanged }: Order
             <section className="rounded-2xl border border-border/60 bg-background/35 p-4">
               <p className="mb-3 font-medium">Items</p>
               <div className="flex flex-col divide-y divide-border/60">
-                {order.orderItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{item.product.name}</p>
-                      <p className="text-muted-foreground">
-                        {item.quantity} × {formatMoney(item.product.price)}
+                {order.orderItems.map((item) => {
+                  const cakeDetails = [
+                    item.flavor && `Sabor: ${item.flavor}`,
+                    item.filling && `Relleno: ${item.filling}`,
+                    item.servings && `${item.servings} porciones`,
+                    item.decoration && `Decoración: ${item.decoration}`,
+                  ].filter(Boolean) as string[];
+                  return (
+                    <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{item.product.name}</p>
+                        <p className="text-muted-foreground">
+                          {item.quantity} × {formatMoney(item.product.price)}
+                        </p>
+                        {cakeDetails.map((detail) => (
+                          <p key={detail} className="text-muted-foreground">
+                            {detail}
+                          </p>
+                        ))}
+                        {item.referenceImageUrl && (
+                          <a
+                            href={item.referenceImageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary underline"
+                          >
+                            Ver imagen de referencia
+                          </a>
+                        )}
+                      </div>
+                      <p className="font-medium tabular-nums">
+                        {formatMoney(item.quantity * item.product.price)}
                       </p>
                     </div>
-                    <p className="font-medium tabular-nums">
-                      {formatMoney(item.quantity * item.product.price)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+            </section>
+
+            <section className="rounded-2xl border border-border/60 bg-background/35 p-4">
+              <p className="mb-3 font-medium">Entrega</p>
+              <dl className="flex flex-col gap-2">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-muted-foreground">Fecha</dt>
+                  <dd className="text-right">
+                    {order.deliveryDate ? formatDate(order.deliveryDate) : "—"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-muted-foreground">Dirección</dt>
+                  <dd className="text-right">
+                    {order.deliveryAddress ? order.deliveryAddress : "Recoge en tienda"}
+                  </dd>
+                </div>
+                {order.notes && (
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-muted-foreground">Notas</dt>
+                    <dd>{order.notes}</dd>
+                  </div>
+                )}
+              </dl>
             </section>
 
             <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
