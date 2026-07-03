@@ -112,6 +112,26 @@ Según `Agents/project/api-inventory.md`:
 - `OrderRequestDTO` no expone `userId`: los pedidos creados desde la UI quedan sin usuario asociado (limitación del backend).
 - n8n/WhatsApp no implementado (fuera del alcance del frontend).
 
+## Deploy en AWS (S3 + CloudFront)
+
+El frontend se despliega como sitio estático en AWS: S3 privado + CloudFront (HTTPS, CDN, fallback SPA y proxy de API hacia el backend externo). La infraestructura, scripts y guía completa (auth, variables, rollback, teardown) viven en [`infra/aws/frontend/README.md`](../infra/aws/frontend/README.md).
+
+- **CI (PRs a `develop`):** `.github/workflows/frontend-ci.yml` corre `pnpm check`, `pnpm type-check` y `pnpm build`.
+- **Deploy (push a `develop` o manual):** `.github/workflows/frontend-deploy.yml` construye con `VITE_MOCK_DATA=false` y `VITE_API_BASE_URL` (GitHub Variable), sincroniza `dist/` a S3 vía OIDC (sin AWS keys) e invalida CloudFront.
+- **Deploy manual local:** `infra/aws/frontend/scripts/update-frontend.sh`.
+
+## Docker (paridad local/demo)
+
+Imagen opcional multi-stage (build pnpm → Nginx sirviendo `dist/` con fallback SPA). **No** es el path de deploy en AWS; sirve para demos locales y validación en CI.
+
+```bash
+docker build -t deliverai-frontend \
+  --build-arg VITE_MOCK_DATA=true \
+  --build-arg VITE_API_BASE_URL=http://localhost:8080 \
+  ui-design
+docker run --rm -p 8081:80 deliverai-frontend
+```
+
 ## Arquitectura frontend
 
 ```
