@@ -201,7 +201,7 @@ latexmk -pdf -interaction=nonstopmode -file-line-error docs/paper/main.tex
 Always run commands from this folder:
 
 ```bash
-cd /home/onecode/ECI/DeliverAI/docs/paper
+cd docs/paper
 ```
 
 On Windows PowerShell, use the repo path on your machine, for example:
