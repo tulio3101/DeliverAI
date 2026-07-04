@@ -1,5 +1,11 @@
+% =============================================================================
+% Section: 03-intervention-diagnosis.tex | Rubric: Solución propuesta (diagnóstico)
+% Purpose: Por qué un agente y no formulario/RPA; definición de agente.
+% Style: es-CO académico-profesional, sin sobrepromesas; clasificar claims como
+%        implementado/demo/pendiente; labels fig:/tab: estables (snake_case).
+% =============================================================================
 \section{Diagnóstico de intervención}
 
 Una conclusión relevante del diagnóstico es que no todo debe resolverse con IA. Un formulario estructurado reduciría ambigüedad, pero trasladaría fricción al cliente y lo sacaría del canal donde ya compra. Un RPA sería útil si el proceso fuera estable y los datos ya estuvieran organizados, pero aquí el trabajo crítico es interpretar texto libre, mantener contexto, pedir faltantes y producir una salida verificable. Por eso el enfoque de agente es razonable, siempre que se limite su autonomía y se conecte con herramientas transaccionales confiables.
 
-En la definición usada durante el curso, un agente de IA tiene un objetivo, recibe entradas, usa herramientas, produce una salida y decide qué herramienta usar y cuándo. DeliverAI cumple esa definición en el flujo objetivo: interpreta mensajes de WhatsApp, conserva contexto conversacional, solicita información faltante, prepara un resumen y activa herramientas de persistencia solo bajo condiciones. La API, la base de datos y la interfaz administrativa no son decoración técnica; son las barreras determinísticas que convierten una conversación probabilística en un registro verificable.
+En la definición usada durante el curso, alineada con la literatura clásica de agentes racionales y sistemas multiagente~\cite{russell2020,wooldridge2009}, un agente de IA tiene un objetivo, recibe entradas, usa herramientas, produce una salida y decide qué herramienta usar y cuándo. DeliverAI cumple esa definición en el flujo objetivo: interpreta mensajes de WhatsApp, conserva contexto conversacional, solicita información faltante, prepara un resumen y activa herramientas de persistencia solo bajo condiciones. La API, la base de datos y la interfaz administrativa no son decoración técnica; son las barreras determinísticas que convierten una conversación probabilística en un registro verificable.

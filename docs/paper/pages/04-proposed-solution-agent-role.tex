@@ -1,11 +1,33 @@
+% =============================================================================
+% Section: 04-proposed-solution-agent-role.tex | Rubric: Solución propuesta y rol del agente
+% Purpose: Pipeline objetivo, autonomía por acción y límites v1.
+% Style: es-CO académico-profesional, sin sobrepromesas; clasificar claims como
+%        implementado/demo/pendiente; labels fig:/tab: estables (snake_case).
+% =============================================================================
 \section{Solución propuesta y rol del agente}
 
 La solución objetivo se resume así:
 
 \begin{center}
-\texttt{WhatsApp Business -> n8n -> agente conversacional -> API Spring Boot -> PostgreSQL -> Admin UI}
+\begin{tikzpicture}[
+  node distance=0.35cm,
+  st/.style={draw, rounded corners, minimum width=2.1cm, minimum height=1.2cm, align=center, font=\scriptsize},
+  conv/.style={st, fill=orange!12, draw=orange!60!black},
+  core/.style={st, fill=blue!10, draw=blue!55!black},
+  ops/.style={st, fill=green!10, draw=green!55!black},
+  ar/.style={-{Latex[length=2mm]}, thick}
+]
+\node[conv] (a) {WhatsApp\\Business};
+\node[conv, right=of a] (b) {n8n\\workflow};
+\node[conv, right=of b] (c) {Agente\\conversacional};
+\node[core, right=of c] (d) {API\\Spring Boot};
+\node[core, right=of d] (e) {PostgreSQL};
+\node[ops, right=of e] (f) {Admin UI};
+\draw[ar] (a)--(b); \draw[ar] (b)--(c); \draw[ar] (c)--(d);
+\draw[ar] (d)--(e); \draw[ar] (e)--(f);
+\end{tikzpicture}
 \end{center}
 
-El agente recibe el mensaje del cliente, identifica intención y entidades, pregunta datos faltantes, procesa o conserva referencias visuales y construye un resumen del pedido. Su acción más sensible es crear un pedido, pero esa acción debe operar como \textbf{A2 bounded}: solo se permite después de validaciones y confirmación explícita. Para todo lo demás, el agente funciona en A0/A1: asiste, redacta, resume o recomienda, pero no toma decisiones irreversibles.
+El agente recibe el mensaje del cliente, identifica intención y entidades, pregunta datos faltantes, procesa o conserva referencias visuales y construye un resumen del pedido. Su acción más sensible es crear un pedido, pero esa acción debe operar como \textbf{A2 bounded}: solo se permite después de validaciones y confirmación explícita. Para todo lo demás, el agente funciona en A0/A1: asiste, redacta, resume o recomienda, pero no toma decisiones irreversibles. En la escala de autonomía usada en el curso, A0 asiste, A1 recomienda, A2 ejecuta acciones acotadas bajo condiciones, A3 orquesta múltiples agentes y A4 opera con alta autonomía; la autonomía se asigna por acción, no por agente.
 
-También es clave declarar lo que DeliverAI no hace en v1. No inventa productos ni disponibilidad, no calcula precios finales sin reglas del negocio, no procesa pagos, no promete tiempos de entrega fuera de política, no elimina datos y no resuelve reclamos complejos. Cuando hay ambigüedad, producto no disponible, instrucción riesgosa o fallo de herramienta, el flujo debe escalar o regresar a atención humana.
+También es clave declarar lo que DeliverAI no hace en v1. No inventa productos ni disponibilidad, no calcula precios finales sin reglas del negocio, no procesa pagos, no promete tiempos de entrega fuera de política, no elimina datos y no resuelve reclamos complejos. Cuando hay ambigüedad, producto no disponible, instrucción riesgosa o fallo de herramienta, el flujo debe escalar o regresar a atención humana (HITL, \textit{human-in-the-loop}).
