@@ -4,10 +4,10 @@ Los riesgos de un agente de pedidos son materiales porque afectan confianza, dat
 
 \begin{table}[htbp]
 \centering
-\caption{Riesgos principales y controles de DeliverAI}
+\caption{Riesgos principales y controles de DeliverAI}%
 \label{tab:riesgos}
 \small
-\begin{tabular}{@{}p{3.2cm}p{3.6cm}p{3.6cm}p{3.6cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
 \toprule
 \textbf{Riesgo} & \textbf{Preventivo} & \textbf{Detectivo} & \textbf{Correctivo} \\ \midrule
 Pedido incorrecto & Resumen estructurado, campos obligatorios y confirmación explícita & Revisión en estado \texttt{IN\_CONFIRMATION}, monitoreo de rework & Retener pedido, corregir manualmente o cancelar antes de producción. \\
@@ -17,4 +17,4 @@ Pérdida de trazabilidad & Correlation id y registro de entrada, extracción, co
 \end{tabular}
 \end{table}
 
-La autonomía debe asignarse por acción. Redactar una respuesta o resumir una conversación puede ser A0/A1. Crear un pedido puede ser A2 bounded solo si existe confirmación explícita y validación de campos. No se recomienda A3 ni A4 en v1. La supervisión humana debe activarse ante ambigüedad, producto no disponible, reclamos, pagos, promesas de entrega riesgosas, instrucciones maliciosas o fallos de API. En términos prácticos, el humano no es un adorno de control: debe tener evidencia, criterio y capacidad de detener o corregir.
+La autonomía debe asignarse por acción. Redactar una respuesta o resumir una conversación puede ser A0/A1. Crear un pedido puede ser A2 bounded solo si existe confirmación explícita y validación de campos. No se recomienda A3 ni A4 en v1. La supervisión humana debe activarse ante ambigüedad, producto no disponible, reclamos, pagos, promesas de entrega riesgosas, instrucciones maliciosas o fallos de API\@. En términos prácticos, el humano no es un adorno de control: debe tener evidencia, criterio y capacidad de detener o corregir.

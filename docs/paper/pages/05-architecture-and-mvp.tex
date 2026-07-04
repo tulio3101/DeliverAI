@@ -1,6 +1,6 @@
 \section{Arquitectura y MVP técnico}
 
-La arquitectura separa dos mundos. El primero es conversacional y flexible: WhatsApp Business, n8n y el agente LLM. Allí ocurre la interpretación del lenguaje natural. El segundo es transaccional y determinístico: API REST, PostgreSQL y Admin UI. Allí se validan, persisten y operan los pedidos. Esta separación sigue una recomendación común en arquitectura de sistemas con IA: dejar al modelo las tareas de interpretación y explicación, pero reservar el estado de negocio a servicios verificables y auditables~\cite{newman2021,hohpe2003}.
+La arquitectura separa dos mundos. El primero es conversacional y flexible: WhatsApp Business, n8n y el agente LLM\@. Allí ocurre la interpretación del lenguaje natural. El segundo es transaccional y determinístico: API REST, PostgreSQL y Admin UI\@. Allí se validan, persisten y operan los pedidos. Esta separación sigue una recomendación común en arquitectura de sistemas con \mbox{IA}: dejar al modelo las tareas de interpretación y explicación, pero reservar el estado de negocio a servicios verificables y auditables~\cite{newman2021,hohpe2003}.
 
 \begin{figure}[htbp]
 \centering
@@ -28,23 +28,23 @@ La arquitectura separa dos mundos. El primero es conversacional y flexible: What
     \draw[arrow] (n8n) -- node[left, font=\tiny] {excepción} (human);
     \draw[arrow] (human) -- node[below, font=\tiny] {decisión} (n8n);
 \end{tikzpicture}
-\caption{Arquitectura lógica de DeliverAI: conversación probabilística acotada por una capa transaccional y supervisión humana.}
+\caption{Arquitectura lógica de \mbox{DeliverAI}: conversación probabilística acotada por una capa transaccional y supervisión humana.}%
 \label{fig:arquitectura_logica}
 \end{figure}
 
-El repositorio actual contiene un backend Spring Boot 3.4 sobre Java 21, con controladores, servicios, repositorios JPA, DTOs, MapStruct, Swagger/OpenAPI y PostgreSQL. La API expone recursos para usuarios, productos, órdenes y order-items. El modelo de estados de pedido incluye \texttt{IN\_CONFIRMATION}, \texttt{PREPARATION} y \texttt{COMPLETED}. El frontend administrativo está implementado en React, Vite, TypeScript, Tailwind y shadcn/ui, con modo demo y modo API real. La infraestructura del frontend usa S3 privado y CloudFront, mientras que el backend se documenta como desplegado externamente en Azure.
+El repositorio actual contiene un backend Spring Boot 3.4 sobre Java 21, con controladores, servicios, repositorios JPA, DTOs, MapStruct, Swagger/OpenAPI y PostgreSQL\@. La API expone recursos para usuarios, productos, órdenes y order-items. El modelo de estados de pedido incluye \texttt{IN\_CONFIRMATION}, \texttt{PREPARATION} y \texttt{COMPLETED}. El frontend administrativo está implementado en React, Vite, TypeScript, Tailwind y shadcn/ui, con modo demo y modo API real. La infraestructura del frontend usa S3 privado y CloudFront, mientras que el backend se documenta como desplegado externamente en Azure.
 
-El flujo n8n también está versionado en el repositorio como export JSON. Incluye webhooks de Meta, parseo del mensaje, fallback para audio o tipos no soportados, bienvenida y consentimiento, manejo de imagen de referencia hacia Supabase, agente con modelo LLM, memoria conversacional, parser estructurado, validación, creación de pedido en backend y confirmación o fallback de error. Esta evidencia técnica permite afirmar que existe un prototipo demostrable. Aun así, la clasificación honesta del estado es la de la Tabla~\ref{tab:estado_tecnico}.
+El flujo n8n también está versionado en el repositorio como export JSON\@. Incluye webhooks de Meta, parseo del mensaje, fallback para audio o tipos no soportados, bienvenida y consentimiento, manejo de imagen de referencia hacia Supabase, agente con modelo LLM, memoria conversacional, parser estructurado, validación, creación de pedido en backend y confirmación o fallback de error. Esta evidencia técnica permite afirmar que existe un prototipo demostrable. Aun así, la clasificación honesta del estado es la de la Tabla~\ref{tab:estado_tecnico}.
 
 \begin{table}[htbp]
 \centering
-\caption{Estado técnico del MVP y condiciones de piloto}
+\caption{Estado técnico del MVP y condiciones de piloto}%
 \label{tab:estado_tecnico}
 \small
-\begin{tabular}{@{}p{3.5cm}p{4.2cm}p{6cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.5cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{6cm}@{}}
 \toprule
 \textbf{Elemento} & \textbf{Estado} & \textbf{Implicación para el paper} \\ \midrule
-API Spring Boot y PostgreSQL & Implementado y desplegado externamente & Puede defenderse como núcleo transaccional del MVP. \\
+API Spring Boot y PostgreSQL & Implementado y desplegado externamente & Puede defenderse como núcleo transaccional del MVP\@. \\
 Admin UI React & Implementada, con polling REST cada 10 segundos & Puede defenderse como consola operacional del prototipo. \\
 Workflow n8n y agente & Exportado y ejecutado externamente & Puede mostrarse como demo; requiere hosting gobernado para piloto. \\
 Listado de productos & Gap: no hay \texttt{GET /products} & Condición técnica para catálogo real en piloto. \\
