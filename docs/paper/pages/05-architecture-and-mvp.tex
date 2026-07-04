@@ -1,40 +1,61 @@
+% =============================================================================
+% Section: 05-architecture-and-mvp.tex | Rubric: Arquitectura del agente
+% Purpose: Arquitectura lógica, evidencia del MVP real y estado técnico.
+% Style: es-CO académico-profesional, sin sobrepromesas; clasificar claims como
+%        implementado/demo/pendiente; labels fig:/tab: estables (snake_case).
+% =============================================================================
 \section{Arquitectura y MVP técnico}
+\label{sec:arquitectura-mvp}
 
 La arquitectura separa dos mundos. El primero es conversacional y flexible: WhatsApp Business, n8n y el agente LLM\@. Allí ocurre la interpretación del lenguaje natural. El segundo es transaccional y determinístico: API REST, PostgreSQL y Admin UI\@. Allí se validan, persisten y operan los pedidos. Esta separación sigue una recomendación común en arquitectura de sistemas con \mbox{IA}: dejar al modelo las tareas de interpretación y explicación, pero reservar el estado de negocio a servicios verificables y auditables~\cite{newman2021,hohpe2003}.
 
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
-    node distance=1.25cm and 1.55cm,
-    box/.style={draw, rounded corners, minimum width=2.6cm, minimum height=0.95cm, align=center, font=\small},
+    node distance=1.7cm and 1.45cm,
+    box/.style={draw, rounded corners, minimum width=2.7cm, minimum height=0.95cm, align=center, font=\small},
     conv/.style={box, fill=orange!12, draw=orange!60!black},
     core/.style={box, fill=blue!10, draw=blue!55!black},
     ops/.style={box, fill=green!10, draw=green!55!black},
-    arrow/.style={-{Latex[length=3mm]}, thick}
+    hitl/.style={box, fill=orange!12, draw=orange!60!black, dashed, minimum width=2.4cm, minimum height=0.85cm},
+    arrow/.style={-{Latex[length=2.6mm]}, thick},
+    elabel/.style={font=\tiny, inner sep=1.5pt, fill=white},
+    band/.style={rounded corners, inner sep=6pt},
+    bandlab/.style={font=\itshape\footnotesize, text=black!65}
 ]
+    % Fila conversacional (arriba)
     \node[conv] (wa) {WhatsApp\\Business};
     \node[conv, right=of wa] (n8n) {n8n\\workflow};
     \node[conv, right=of n8n] (agent) {Agente LLM\\salida estructurada};
-    \node[core, below=of agent] (api) {Spring Boot API\\validación REST};
-    \node[core, left=of api] (db) {PostgreSQL\\registro operacional};
+    % Banda intermedia HITL, solo bajo n8n
+    \node[hitl, below=1.55cm of n8n] (human) {HITL\\operador};
+    % Fila transaccional (abajo)
+    \node[core, below=1.55cm of human] (db) {PostgreSQL\\registro operacional};
+    \node[core, right=of db] (api) {Spring Boot API\\validación REST};
     \node[ops, left=of db] (ui) {Admin UI\\React};
-    \node[ops, below=of n8n] (human) {HITL\\operador};
 
-    \draw[arrow] (wa) -- node[above, font=\tiny] {mensaje} (n8n);
-    \draw[arrow] (n8n) -- node[above, font=\tiny] {contexto} (agent);
-    \draw[arrow] (agent) -- node[right, font=\tiny] {pedido confirmado} (api);
-    \draw[arrow] (api) -- node[below, font=\tiny] {persistencia} (db);
-    \draw[arrow] (ui) -- node[above, font=\tiny] {consulta/estado} (db);
-    \draw[arrow] (n8n) -- node[left, font=\tiny] {excepción} (human);
-    \draw[arrow] (human) -- node[below, font=\tiny] {decisión} (n8n);
+    \draw[arrow] (wa) -- node[elabel] {mensaje} (n8n);
+    \draw[arrow] (n8n) -- node[elabel] {contexto} (agent);
+    \draw[arrow] (agent.south) -- node[elabel, pos=0.62, right] {pedido} node[elabel, pos=0.62, right, yshift=-0.3cm] {confirmado} (api.north);
+    \draw[arrow] (api) -- node[elabel] {persistencia} (db);
+    \draw[arrow] (ui) -- node[elabel] {consulta/estado} (db);
+    \draw[arrow] ([xshift=-3.5mm]n8n.south) -- node[elabel, left] {excepción} ([xshift=-3.5mm]human.north);
+    \draw[arrow] ([xshift=3.5mm]human.north) -- node[elabel, right] {decisión} ([xshift=3.5mm]n8n.south);
+
+    \begin{scope}[on background layer]
+        \node[band, fill=orange!5, fit=(wa)(n8n)(agent)] (topband) {};
+        \node[band, fill=blue!4, fit=(ui)(db)(api)] (botband) {};
+    \end{scope}
+    \node[bandlab, anchor=west] at ([yshift=2pt]topband.north west) {Mundo conversacional};
+    \node[bandlab, anchor=west] at ([yshift=2pt]botband.north west) {Mundo transaccional};
 \end{tikzpicture}
 \caption{Arquitectura lógica de \mbox{DeliverAI}: conversación probabilística acotada por una capa transaccional y supervisión humana.}%
 \label{fig:arquitectura_logica}
 \end{figure}
 
-El repositorio actual contiene un backend Spring Boot 3.4 sobre Java 21, con controladores, servicios, repositorios JPA, DTOs, MapStruct, Swagger/OpenAPI y PostgreSQL\@. La API expone recursos para usuarios, productos, órdenes y order-items. El modelo de estados de pedido incluye \texttt{IN\_CONFIRMATION}, \texttt{PREPARATION} y \texttt{COMPLETED}. El frontend administrativo está implementado en React, Vite, TypeScript, Tailwind y shadcn/ui, con modo demo y modo API real. La infraestructura del frontend usa S3 privado y CloudFront, mientras que el backend se documenta como desplegado externamente en Azure.
+El repositorio actual contiene un backend Spring Boot 3.4 sobre Java 21, con controladores, servicios, repositorios JPA, DTOs, MapStruct, Swagger/OpenAPI y PostgreSQL\@. La API expone recursos para usuarios, productos, órdenes y order-items, incluido el listado de catálogo \texttt{GET /products} incorporado en la integración reciente entre backend y frontend. El ciclo de vida del pedido se modela con siete estados, desde \texttt{IN\_CONFIRMATION} hasta \texttt{COMPLETED}, pasando por pago, preparación y entrega. El frontend administrativo está implementado en React, Vite, TypeScript, Tailwind y shadcn/ui, con modo demo y modo API real. La infraestructura del frontend usa S3 privado y CloudFront, el backend está desplegado externamente en Azure, y ambos despliegues se automatizan con pipelines de integración y entrega continua en GitHub Actions~\cite{humble2010}.
 
-El flujo n8n también está versionado en el repositorio como export JSON\@. Incluye webhooks de Meta, parseo del mensaje, fallback para audio o tipos no soportados, bienvenida y consentimiento, manejo de imagen de referencia hacia Supabase, agente con modelo LLM, memoria conversacional, parser estructurado, validación, creación de pedido en backend y confirmación o fallback de error. Esta evidencia técnica permite afirmar que existe un prototipo demostrable. Aun así, la clasificación honesta del estado es la de la Tabla~\ref{tab:estado_tecnico}.
+El flujo n8n también está versionado en el repositorio como export JSON de 36 nodos~\cite{n8n2026}. Incluye webhooks de Meta con deduplicación de reintentos, fallback para audio o tipos no soportados, bienvenida con aviso de consentimiento de datos, manejo de imagen de referencia hacia Supabase, agente LangChain sobre un modelo Llama 3.3 70B servido por Groq, memoria conversacional de ventana deslizante, parser de salida estructurada con campos obligatorios, creación de pedido en backend y confirmación o fallback de error. Un detalle coherente con los límites declarados del agente: el workflow no calcula precios; el subtotal se registra en cero y lo confirma el negocio. Esta evidencia técnica permite afirmar que existe un prototipo demostrable. Aun así, la clasificación honesta del estado es la de la Tabla~\ref{tab:estado_tecnico}.
 
 \begin{table}[htbp]
 \centering
@@ -47,9 +68,120 @@ El flujo n8n también está versionado en el repositorio como export JSON\@. Inc
 API Spring Boot y PostgreSQL & Implementado y desplegado externamente & Puede defenderse como núcleo transaccional del MVP\@. \\
 Admin UI React & Implementada, con polling REST cada 10 segundos & Puede defenderse como consola operacional del prototipo. \\
 Workflow n8n y agente & Exportado y ejecutado externamente & Puede mostrarse como demo; requiere hosting gobernado para piloto. \\
-Listado de productos & Gap: no hay \texttt{GET /products} & Condición técnica para catálogo real en piloto. \\
-Asociación pedido-usuario & Gap en DTO de creación de orden & Riesgo técnico que debe cerrarse antes de piloto real. \\
+Listado de productos & Implementado: \texttt{GET /products} disponible & Falta que el agente consuma el catálogo real desde la API en piloto. \\
+Asociación pedido-usuario & Implementada por búsqueda telefónica; el DTO no expone \texttt{userId} & Refinar el modelo de identidad del cliente antes de piloto real. \\
 Autenticación y roles en Admin UI & Pendiente & No debe presentarse como producción segura. \\
 Correlation id y auditoría completa & Pendiente o parcial & Condición de gobierno para operar con clientes reales. \\ \bottomrule
 \end{tabular}
 \end{table}
+
+La Figura~\ref{fig:arquitectura_logica} muestra la arquitectura en su nivel lógico, sin comprometerse con proveedores de nube ni protocolos. La Figura~\ref{fig:arquitectura_detallada} la complementa con el mapa de despliegue relevado del repositorio: qué corre en qué nube, qué protocolo conecta cada componente y qué mecanismo sostiene la sincronización entre el panel administrativo y el estado del pedido. Es la vista que un equipo de operaciones necesitaría para dar soporte al prototipo.
+
+\begin{figure}[htbp]
+\centering
+\shorthandoff{<>}%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Stealth[length=2mm]},
+  node distance=4mm and 8mm,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=3pt, minimum height=8mm, text width=26mm},
+  conv/.style={box, fill=orange!12, draw=orange!60!black},
+  core/.style={box, fill=blue!10, draw=blue!55!black},
+  ops/.style={box, fill=green!10, draw=green!55!black},
+  ext/.style={box, fill=gray!12, draw=gray!55!black, dashed},
+  flow/.style={->, thick, blue!55!black},
+  data/.style={->, thick, gray!55!black},
+  extflow/.style={->, thick, gray!55!black, dashed},
+]
+
+% ===== TITLE =====
+\node[font=\small\bfseries] (title) {DeliverAI --- Arquitectura t\'ecnica detallada};
+
+% ===== CLIENT + META =====
+\node[conv, below=6mm of title.south, xshift=-52mm] (wa) {Cliente\\ WhatsApp};
+\node[conv, right=of wa] (meta) {Meta Cloud API\\ \tiny webhook GET/POST};
+
+% ===== n8n INNER NODES =====
+\node[conv, below=13mm of meta, text width=30mm] (dedupe) {Dedupe / parse\\ mensaje};
+\node[conv, below=of dedupe, text width=30mm] (welcome) {Primer contacto:\\ bienvenida + consent.};
+\node[conv, below=of welcome, text width=30mm] (fallback) {Fallbacks: audio,\\ no soportado, error};
+\node[conv, right=10mm of dedupe, text width=32mm] (agent) {Agente LangChain\\ \tiny Llama 3.3 70B (Groq) T=0.2};
+\node[conv, below=of agent, text width=34mm, minimum height=13mm] (mem) {Memoria ventana 20,\\ parser estructurado};
+
+% ===== EXTERNAL SERVICES (stacked right, dashed border) =====
+\node[ext, right=10mm of agent, text width=26mm] (groq) {Groq\\ \tiny inferencia LLM};
+\node[ext, right=10mm of mem, text width=26mm, minimum height=13mm] (supa) {Supabase Storage\\ \tiny im\'agenes};
+
+% ===== n8n CONTAINER =====
+\begin{scope}[on background layer]
+\node[ext, fit=(dedupe)(welcome)(fallback)(agent)(mem), inner sep=5pt,
+      label={[font=\tiny,anchor=north west,yshift=-1pt]south west:n8n workflow (36 nodos, runtime externo)}] (n8n) {};
+\end{scope}
+
+% ===== BACKEND + DB =====
+\node[core, below=20mm of n8n.south, text width=44mm, minimum height=14mm] (backend)
+      {Backend Spring Boot 3.4 / Java 21\\ \tiny Azure Web App --- controllers users / products / orders / order-items};
+\node[core, left=10mm of backend, text width=26mm] (db) {PostgreSQL\\ \tiny 7 estados de pedido};
+
+% ===== ADMIN + CLOUDFRONT =====
+\node[ops, right=16mm of backend, text width=30mm, minimum height=14mm] (admin)
+      {Admin UI React/Vite/TS\\ \tiny polling REST 10s};
+\node[ext, above=8mm of admin, text width=30mm] (cf) {CloudFront (OAC)\\ \tiny S3 privado + rutas /order,/products};
+
+% ===== CI/CD =====
+\node[ops, below=9mm of backend, text width=46mm] (cicd)
+      {CI/CD GitHub Actions\\ \tiny pipeline.yml$\to$Azure \quad frontend-deploy.yml$\to$S3+CF (OIDC)};
+
+% ===== EDGES =====
+\draw[flow] (wa) -- (meta);
+\draw[flow] (meta) -- (dedupe);
+\draw[flow] (dedupe) -- (welcome);
+\draw[flow] (welcome) -- (fallback);
+\draw[flow] (dedupe) -- (agent);
+\draw[flow] (agent) -- (mem);
+\draw[extflow] (agent) -- (groq);
+\draw[extflow] (mem) -- (supa) node[pos=0.75,above,font=\tiny]{imagen};
+
+% n8n -> backend
+\draw[flow] (n8n.south) -- (backend.north)
+      node[pos=0.55,right,font=\tiny]{HTTP POST /order};
+% backend -> db
+\draw[data] (backend) -- (db) node[midway,above,font=\tiny]{JDBC};
+% admin -> backend (REST) y CloudFront -> Admin UI
+\draw[flow] (admin.west) -- (backend.east) node[midway,above,font=\tiny]{REST};
+\draw[flow] (cf.south) -- (admin.north) node[midway,right,font=\tiny]{UI};
+% CloudFront -> Backend (enrutado /order,/products)
+\draw[extflow] (cf.west) to[out=180,in=70] (backend.north east);
+\node[font=\tiny,gray!55!black] at ($(cf.west)!0.55!(backend.north east)+(3mm,1.5mm)$) {proxy};
+% ci/cd
+\draw[data] (cicd.north) -- (backend.south);
+
+% ===== LEGEND =====
+\node[draw, rounded corners=2pt, below=6mm of cicd, xshift=-2mm, text width=158mm, inner sep=4pt, font=\tiny, align=left] (leg) {
+\textbf{Leyenda:}\;
+\tikz\node[fill=orange!12,draw=orange!60!black,minimum width=4mm,minimum height=2.5mm]{};\,Conversacional \quad
+\tikz\node[fill=blue!10,draw=blue!55!black,minimum width=4mm,minimum height=2.5mm]{};\,N\'ucleo transaccional \quad
+\tikz\node[fill=green!10,draw=green!55!black,minimum width=4mm,minimum height=2.5mm]{};\,Operaciones/UI \quad
+\tikz\node[fill=gray!12,draw=gray!55!black,minimum width=4mm,minimum height=2.5mm]{};\,Externos/infra \quad
+\tikz\draw[dashed,gray!55!black](0,0)--(0.5,0);\,Borde/flecha punteada = runtime externo};
+
+\end{tikzpicture}
+\caption{Arquitectura técnica detallada de \mbox{DeliverAI}: vista de despliegue. El flujo conversacional (Meta Cloud API, workflow n8n de 36 nodos con agente LangChain, memoria y parser estructurado; Groq y Supabase como servicios externos) confirma pedidos vía \texttt{POST /order} contra la API Spring Boot en Azure Web App, que persiste en PostgreSQL\@. La Admin UI se sirve desde CloudFront con S3 privado y sondea la API cada 10 segundos. Los bordes punteados marcan componentes de runtime externo, condición de hosting gobernado pendiente para el piloto.}%
+\label{fig:arquitectura_detallada}
+\end{figure}
+
+Esta vista de despliegue confirma, con evidencia de infraestructura, la misma disciplina de estados de la Tabla~\ref{tab:estado_tecnico}: el backend y el frontend están implementados y desplegados (Azure y AWS respectivamente), mientras que el hosting gobernado del workflow n8n y la trazabilidad extremo a extremo siguen pendientes para el piloto. El sondeo cada 10 segundos de la Admin UI es una decisión de prototipo, no una garantía de notificación en tiempo real, y debería revisarse antes de operar con clientes reales.
+
+% -----------------------------------------------------------------------
+% --- Alternativa con imagen (comentada) ---------------------------------
+% El repositorio versiona un diagrama de despliegue exportado desde
+% Excalidraw. Para adjuntar esa imagen en lugar del TikZ anterior,
+% descomentar. Fuente editable:
+% docs/architecture/deliverai-system-architecture.excalidraw
+% \begin{figure}[htbp]
+% \centering
+% \includegraphics[width=0.92\textwidth]{../../media/architecture-diagram.png}
+% \caption{Arquitectura técnica detallada de \mbox{DeliverAI} (export Excalidraw).}%
+% \label{fig:arquitectura_detallada_img}
+% \end{figure}
+% -----------------------------------------------------------------------
