@@ -1,0 +1,32 @@
+% =============================================================================
+% Project: DeliverAI
+% File: main.tex
+% Description: Central orchestrator for the final AI agents course paper.
+% =============================================================================
+
+\documentclass[12pt]{article}
+
+\input{config/preamble.tex}
+\input{config/metadata.tex}
+
+\begin{document}
+\maketitle
+
+% =============================================================================
+% PAPER CONTENT
+% Each section is imported separately to keep the paper easy to maintain.
+% =============================================================================
+\input{pages/front-matter.tex}
+\input{pages/01-introduction.tex}
+\input{pages/02-problem-and-use-case.tex}
+\input{pages/03-intervention-diagnosis.tex}
+\input{pages/04-proposed-solution-agent-role.tex}
+\input{pages/05-architecture-and-mvp.tex}
+\input{pages/06-business-value-metrics.tex}
+\input{pages/07-risks-and-controls.tex}
+\input{pages/08-roadmap-to-pilot.tex}
+\input{pages/09-lessons-learned.tex}
+\input{pages/10-conclusions.tex}
+\input{pages/references.tex}
+
+\end{document}

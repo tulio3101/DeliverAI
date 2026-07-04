@@ -1,0 +1,26 @@
+% =============================================================================
+% Section: 07-risks-and-controls.tex | Rubric: Riesgos y controles
+% Purpose: Riesgos críticos, controles y supervisión humana.
+% Style: es-CO académico-profesional, sin sobrepromesas; clasificar claims como
+%        implementado/demo/pendiente; labels fig:/tab: estables (snake_case).
+% =============================================================================
+\section{Riesgos críticos y controles}
+
+Los riesgos de un agente de pedidos son materiales porque afectan confianza, datos personales y operación. El enfoque de gobierno debe cubrir todo el sistema: modelo, prompts, datos, memoria, herramientas, humanos, monitoreo e incidentes. Esta visión es consistente con marcos actuales de gestión de riesgo de IA, como NIST AI RMF~\cite{nist2023} e ISO/IEC 23894~\cite{iso23894}, y con la idea de que la arquitectura debe documentar decisiones, límites y responsabilidades~\cite{iso42010}. El riesgo de exceso de agencia, en particular, corresponde a la categoría \textit{Excessive Agency} del OWASP Top 10 para aplicaciones con LLM~\cite{owasp2025llm}.
+
+\begin{table}[htbp]
+\centering
+\caption{Riesgos principales y controles de DeliverAI}%
+\label{tab:riesgos}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
+\toprule
+\textbf{Riesgo} & \textbf{Preventivo} & \textbf{Detectivo} & \textbf{Correctivo} \\ \midrule
+Pedido incorrecto & Resumen estructurado, campos obligatorios y confirmación explícita & Revisión en estado \texttt{IN\_CONFIRMATION}, monitoreo de rework & Retener pedido, corregir manualmente o cancelar antes de producción. \\
+Exceso de agencia & Tool allowlist, acciones prohibidas y autonomía por acción & Logs de tool calls y alertas por acción fuera de alcance & Pausar workflow y volver a atención manual. \\
+Datos personales expuestos & Minimización, consentimiento y no capturar pagos en v1 & Auditoría de logs y revisión de conversaciones muestreadas & Borrado, bloqueo de acceso e incidente de privacidad. \\
+Pérdida de trazabilidad & Correlation id y registro de entrada, extracción, confirmación y resultado API & Alertas por logs incompletos & Kill trigger: no operar sin evidencia auditable. \\ \bottomrule
+\end{tabular}
+\end{table}
+
+La autonomía debe asignarse por acción. Redactar una respuesta o resumir una conversación puede ser A0/A1. Crear un pedido puede ser A2 bounded solo si existe confirmación explícita y validación de campos. No se recomienda A3 ni A4 en v1. La supervisión humana debe activarse ante ambigüedad, producto no disponible, reclamos, pagos, promesas de entrega riesgosas, instrucciones maliciosas o fallos de API\@. En términos prácticos, el humano no es un adorno de control: debe tener evidencia, criterio y capacidad de detener o corregir, en línea con las guías de diseño de interacción humano-IA~\cite{amershi2019}.

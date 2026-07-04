@@ -1,0 +1,17 @@
+% =============================================================================
+% Section: 09-lessons-learned.tex | Rubric: Aprendizajes
+% Purpose: Aprendizajes aplicados del proceso.
+% Style: es-CO académico-profesional, sin sobrepromesas; clasificar claims como
+%        implementado/demo/pendiente; labels fig:/tab: estables (snake_case).
+% =============================================================================
+\section{Aprendizajes del proceso}
+
+El primer aprendizaje es que el diagnóstico precede a la arquitectura. Si el problema se define como ``necesitamos IA'', el proyecto queda sobredimensionado desde el inicio. Si se define como ``convertir conversaciones incompletas en pedidos confirmados y trazables'', entonces cada pieza técnica tiene una razón de existir.
+
+El segundo aprendizaje es separar lenguaje natural de transacción. El agente es útil porque entiende intención y contexto, pero la operación necesita validaciones clásicas, APIs, estados y auditoría. Esta separación reduce el riesgo de confiar demasiado en la salida del modelo.
+
+El tercer aprendizaje es que la gobernanza no debe llegar al final. Los controles de confirmación, límites de autonomía, fallbacks, logs y kill triggers son parte del diseño. En sistemas con agentes, la pregunta no es solo qué puede hacer el sistema, sino qué no se le permite hacer.
+
+El cuarto aprendizaje es de comunicación ejecutiva. Para defender un agente ante un comité, no basta con mostrar tecnología. Hay que pedir una decisión clara, explicar el costo de no actuar, diferenciar prototipo de piloto y producción, presentar métricas y reconocer riesgos sin esconderlos.
+
+El quinto aprendizaje es que la evidencia envejece rápido. Durante la revisión final de este artículo se detectó documentación desactualizada frente al código: un endpoint reportado como faltante ya estaba implementado en el repositorio. Verificar cada afirmación contra el estado real del sistema, y no contra documentos intermedios, es también una práctica de gobierno.
