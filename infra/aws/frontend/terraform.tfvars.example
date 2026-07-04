@@ -1,0 +1,31 @@
+# Copy this file to terraform.tfvars and fill in real values.
+# terraform.tfvars is (and must stay) gitignored - see infra/aws/frontend/README
+# notes / repo .gitignore. Never commit real account IDs or domains here if
+# they're considered sensitive for your environment.
+
+project_name = "deliverai-frontend"
+aws_region   = "us-east-1"
+
+# External backend FQDN (Azure Web App), no scheme.
+backend_origin_domain = "deliverai-backend.azurewebsites.net"
+
+github_repo   = "tulio3101/DeliverAI"
+github_branch = "develop"
+
+# Set to false if the token.actions.githubusercontent.com OIDC provider
+# already exists in this AWS account (an account may only have one).
+create_github_oidc_provider = true
+
+enable_bucket_versioning = false
+
+# PriceClass_All (default) includes South America edge locations, which
+# matters for Colombia/Bogota-based users. Use PriceClass_100 for a
+# cheaper, lower-coverage demo/staging stack.
+cloudfront_price_class = "PriceClass_All"
+
+tags = {
+  Project     = "DeliverAI"
+  ManagedBy   = "terraform"
+  Component   = "frontend"
+  Environment = "production"
+}
