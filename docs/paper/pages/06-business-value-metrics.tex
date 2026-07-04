@@ -1,0 +1,22 @@
+\section{Valor esperado y métricas}
+
+El KPI principal es la \textbf{conversión de consulta por WhatsApp a pedido confirmado}. Esta métrica conecta el agente con valor de negocio sin caer en una promesa simplista de reducción de personal. Un piloto bien diseñado debe medir el antes y el después, porque hoy el proceso manual no necesariamente tiene línea base. Por eso la primera fase del piloto debe registrar tiempos, conversiones y fallbacks antes de declarar beneficios.
+
+\begin{table}[htbp]
+\centering
+\caption{Métricas propuestas para el piloto controlado}
+\label{tab:metricas}
+\small
+\begin{tabular}{@{}p{4cm}p{6.2cm}p{4cm}@{}}
+\toprule
+\textbf{Métrica} & \textbf{Qué muestra} & \textbf{Uso ejecutivo} \\ \midrule
+Conversión a pedido confirmado & Porcentaje de consultas que terminan en pedido validado & KPI principal de valor. \\
+Tiempo a confirmación & Minutos entre primer mensaje y resumen confirmado & Evalúa velocidad y fricción. \\
+Pedidos incompletos & Casos que llegan a operación con datos faltantes & Mide calidad de captura. \\
+Mensajes de aclaración & Número de preguntas necesarias por pedido & Mide eficiencia conversacional. \\
+Fallback o escalamiento & Casos que el agente no debe resolver solo & Mide riesgo y carga humana. \\
+Errores y reproceso & Pedidos corregidos o retenidos antes de producción & Mide daño operativo evitado. \\ \bottomrule
+\end{tabular}
+\end{table}
+
+El valor esperado no debe expresarse como una cifra inventada. La hipótesis defendible es que DeliverAI puede reducir el tiempo de confirmación, aumentar la proporción de pedidos completos y mejorar la trazabilidad. Si el piloto no muestra mejora frente a la línea base o si la operación humana aumenta por fallbacks excesivos, el proyecto debe ajustarse o detenerse.

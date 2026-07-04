@@ -1,0 +1,11 @@
+\section{Solución propuesta y rol del agente}
+
+La solución objetivo se resume así:
+
+\begin{center}
+\texttt{WhatsApp Business -> n8n -> agente conversacional -> API Spring Boot -> PostgreSQL -> Admin UI}
+\end{center}
+
+El agente recibe el mensaje del cliente, identifica intención y entidades, pregunta datos faltantes, procesa o conserva referencias visuales y construye un resumen del pedido. Su acción más sensible es crear un pedido, pero esa acción debe operar como \textbf{A2 bounded}: solo se permite después de validaciones y confirmación explícita. Para todo lo demás, el agente funciona en A0/A1: asiste, redacta, resume o recomienda, pero no toma decisiones irreversibles.
+
+También es clave declarar lo que DeliverAI no hace en v1. No inventa productos ni disponibilidad, no calcula precios finales sin reglas del negocio, no procesa pagos, no promete tiempos de entrega fuera de política, no elimina datos y no resuelve reclamos complejos. Cuando hay ambigüedad, producto no disponible, instrucción riesgosa o fallo de herramienta, el flujo debe escalar o regresar a atención humana.

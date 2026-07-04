@@ -1,0 +1,33 @@
+% =============================================================================
+% Shared LaTeX configuration for the DeliverAI paper.
+% =============================================================================
+
+% --- Packages ---
+\usepackage[spanish]{babel}        % Language support (Spanish)
+\usepackage[utf8]{inputenc}        % Character encoding
+\usepackage[a4paper,left=2cm,right=2cm,top=2.1cm,bottom=2.1cm]{geometry}
+\usepackage{amsmath}               % Mathematical formulas
+\usepackage{graphicx}              % Image handling
+\usepackage[colorinlistoftodos]{todonotes} % TODO annotations
+\usepackage{hyperref}              % Hyperlinks and cross-references
+\usepackage{booktabs}              % Professional tables
+
+\usepackage{epigraph}              % Init quote
+\renewcommand{\sourceflush}{flushleft}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{units}
+
+% --- Document setup ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!55!black,
+    citecolor=blue!55!black,
+    urlcolor=blue!55!black
+}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+\setlength{\epigraphwidth}{0.74\textwidth}
