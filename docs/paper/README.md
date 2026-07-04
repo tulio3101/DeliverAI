@@ -360,3 +360,13 @@ Ensure the file is saved as UTF-8. `main.tex` uses:
 ### PDF viewer locks the file on Windows
 
 Some viewers lock `main.pdf`, preventing recompilation. Close the PDF or use SumatraPDF, which handles LaTeX rebuilds more smoothly.
+
+## Style & Collaboration Guide
+
+- **One file per section.** Each `\section` lives in exactly one `pages/NN-slug.tex`; never split a section across files or merge two sections into one.
+- **Adding a section.** Create `pages/NN-slug.tex` (next free zero-padded number), add `\input{pages/NN-slug.tex}` to `main.tex` in reading order, and open the new file with the standard header (section, rubric criterion, style rules).
+- **Citations.** IEEE-ish numbered style via `references.tex`'s `thebibliography`. Every `\bibitem` must be `\cite`d at least once; every `\cite` must resolve to a `\bibitem`. Diff bibitem keys vs cite keys before opening a PR.
+- **Word budget.** Rubric target is 2000-3000 words for the body (excludes front matter/references). Check with `wc -w` before submitting; trim rather than pad.
+- **Diagram palette.** Keep the fixed TikZ color code: orange = conversational/agent layer, blue = transactional/core layer, green = operational/done, gray = future/pending. Reuse these fills; don't add new colors without team agreement.
+- **Claims discipline.** Tag every technical claim as implemented, demo/prototype, or pending/future — never present as production-ready.
+- **Before opening a PR.** Run `chktex pages/*.tex` and `latexmk -pdf -interaction=nonstopmode -file-line-error main.tex`; both must be clean (or only pre-existing warnings), and skim the rendered PDF section you touched.
