@@ -279,6 +279,58 @@ flowchart LR
 
 ---
 
+## 🔗 n8n Workflow — WhatsApp Ordering Agent
+
+The exported workflow lives at [`n8n/DeliverAI - WhatsApp Orders Final.json`](n8n/DeliverAI%20-%20WhatsApp%20Orders%20Final.json). It receives WhatsApp messages via Meta's webhook, deduplicates/routes them, runs an AI agent (LangChain + OpenAI) that collects the order data, uploads reference images to Supabase, and finally calls the DeliverAI REST API (`POST /order`).
+
+
+![n8n workflow overview](docs/img/workflow-1.png)
+
+![n8n workflow overview](docs/img/workflow-2.png)
+
+
+### 1. Import the workflow
+
+1. Open your n8n instance (n8n Cloud or self-hosted).
+2. **Workflows → Import from File** and select the JSON above (or drag it into the canvas).
+3. n8n will recreate all nodes but **without credentials** — they aren't exported for security reasons, so you must (re)create them (step 2).
+
+### 2. Configure credentials
+
+| Credential name in n8n | Type | Used by | What you need |
+|---|---|---|---|
+| `WhatsApp account` | `whatsAppApi` | All `WhatsApp - ...` send nodes | Access Token + WhatsApp Business **Phone Number ID** (from Meta for Developers) |
+| `Whatsapp Api Key` | `httpHeaderAuth` | `HTTP - Obtener/Descargar Media WhatsApp` | Header `Authorization: Bearer <same access token>`, used to fetch/download media from the Graph API |
+| `Supabase account` | `supabaseApi` | `HTTP - Subir Imagen a Supabase` | Supabase project URL + service role key (bucket `deliver-ai-images`) |
+| `OpenAI account` | `openAiApi` | `OpenAI Chat Model` (`gpt-5-mini`) | OpenAI API key |
+
+### 3. Replace the placeholder values
+
+The export was made from a specific instance, so these hardcoded values must be updated before it will work with your own accounts:
+
+| Where | Placeholder | Replace with |
+|---|---|---|
+| `phoneNumberId` param in the 5 `WhatsApp - ...` nodes | `1242292845624299` | Your WhatsApp Business **Phone Number ID** |
+| `IF - Verify Token Válido` node | `test123` | Your own verify token (must match the one set in Meta's webhook config, step 4) |
+| `Code - Construir Input del Agente` / `HTTP - Crear Pedido en Backend` | `https://deliverai-....azurewebsites.net` | Your deployed API base URL (or a public tunnel like `ngrok` if testing locally) |
+| `HTTP - Subir Imagen a Supabase` / `Code - Construir URL Imagen Referencia` | `prixpldbhstzeovfjwxt.supabase.co` + bucket `deliver-ai-images` | Your own Supabase project ref and bucket |
+
+### 4. Configure the WhatsApp webhook in Meta
+
+1. Create an app at [developers.facebook.com](https://developers.facebook.com) → type **Business** → add the **WhatsApp** product.
+2. Under **WhatsApp → API Setup**, grab a temporary access token and the test **Phone Number ID** (or generate a permanent token with a System User for production) — use these in the `WhatsApp account` credential (step 2).
+3. **Activate** the workflow in n8n (top-right toggle). This turns on the two webhook nodes and exposes the production URL, e.g. `https://<your-n8n-instance>/webhook/whatsapp`.
+4. In the Meta App, go to **WhatsApp → Configuration → Webhook → Edit** and set:
+   - **Callback URL**: the n8n production webhook URL from step 3.
+   - **Verify Token**: the same string you put in the `IF - Verify Token Válido` node (step 3).
+5. Click **Verify and Save** — Meta sends a `GET` with `hub.mode=subscribe`, `hub.verify_token` and `hub.challenge`; the `Meta Verify - GET Webhook` node validates the token and echoes the challenge automatically.
+6. Under **Webhook fields**, subscribe to `messages`.
+7. While the app is in **Development mode**, add your test WhatsApp number under API Setup → "To" (not needed once the app is approved for production/live use).
+
+### 5. Test it
+
+Send a message (e.g. "Hola") from the registered WhatsApp number — the agent should reply with the welcome + data-consent message and start collecting the order.
+
 ## 🙌 Team
 
 - [Tulio Riaño Sánchez](https://github.com/tulio3101)
