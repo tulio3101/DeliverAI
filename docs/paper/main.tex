@@ -1,241 +1,32 @@
 % =============================================================================
 % Project: DeliverAI
 % File: main.tex
-% Description: Applied dissemination paper for the final AI agents course deliverable.
+% Description: Central orchestrator for the final AI agents course paper.
 % =============================================================================
 
 \documentclass[12pt]{article}
 
-% --- Packages ---
-\usepackage[spanish]{babel}        % Language support (Spanish)
-\usepackage[utf8]{inputenc}        % Character encoding
-\usepackage[a4paper,left=2cm,right=2cm,top=2.1cm,bottom=2.1cm]{geometry}
-\usepackage{amsmath}               % Mathematical formulas
-\usepackage{graphicx}              % Image handling
-\usepackage[colorinlistoftodos]{todonotes} % TODO annotations
-\usepackage{hyperref}              % Hyperlinks and cross-references
-\usepackage{booktabs}              % Professional tables
-
-\usepackage{epigraph}              % Init quote
-\renewcommand{\sourceflush}{flushleft}
-
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
-\usepgfplotslibrary{units}
-
-% --- Document setup ---
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue!55!black,
-    citecolor=blue!55!black,
-    urlcolor=blue!55!black
-}
-\setlength{\parskip}{0.55em}
-\setlength{\parindent}{0pt}
-\setlength{\epigraphwidth}{0.74\textwidth}
-
-% --- Metadata ---
-\title{DeliverAI: de conversaciones de WhatsApp a pedidos confirmados mediante un agente de IA gobernado}
-\author{Equipo DeliverAI: Tulio, Julian, Sergio, Manuel y David}
-\date{Escuela Colombiana de Ingeniería Julio Garavito\\Curso de Hiperautomatización, 2026-I}
+\input{config/preamble.tex}
+\input{config/metadata.tex}
 
 \begin{document}
 \maketitle
 
-\begin{flushleft}
-    \footnotesize \textbf{ÁREAS DE ESTUDIO:} \textit{agentes de IA, hiperautomatización, WhatsApp Business, n8n, arquitectura de software, APIs REST, gobierno de IA, trazabilidad, PyMEs, automatización de pedidos.}
-\end{flushleft}
-
-\begin{abstract}
-DeliverAI es un proyecto académico aplicado que busca reducir la fricción entre una consulta comercial por WhatsApp y un pedido confirmado, completo y trazable. El caso se enfoca en PyMEs que reciben pedidos personalizados por chat, donde la información llega en texto libre, imágenes, cambios de último minuto y datos incompletos. La solución propuesta combina un agente conversacional orquestado por n8n, una API transaccional en Spring Boot, una base PostgreSQL y una interfaz administrativa en React. El artículo presenta el problema, el alcance real del MVP técnico, la arquitectura defendible, el valor esperado, los riesgos críticos y los controles necesarios para avanzar a un piloto controlado. La tesis central es prudente: DeliverAI no debe presentarse como producción terminada, sino como un prototipo funcional con evidencia suficiente para validar, con métricas y supervisión humana, si un agente de IA puede mejorar la conversión de conversaciones de WhatsApp a pedidos confirmados.
-\end{abstract}
-
-\epigraph{\textit{``Un agente no está listo para producción cuando funciona; está listo cuando puede limitarse, monitorearse, explicarse, auditarse, detenerse y corregirse.''}}{--- Principio de gobierno usado en el curso}
-
-\section{Introducción}
-
-WhatsApp se ha convertido en un canal natural de venta para muchos negocios pequeños y medianos. Para una PyME, contestar por chat es cercano, rápido y barato; sin embargo, esa misma flexibilidad produce un problema operativo. Un cliente puede pedir una torta, enviar una foto de referencia, cambiar la fecha, olvidar la dirección y confirmar detalles en mensajes separados. El negocio entiende la intención, pero debe reconstruir manualmente el pedido, copiar datos, hacer preguntas repetidas y asumir el costo si algo se pierde en la conversación.
-
-DeliverAI parte de esa realidad. El objetivo no es reemplazar al equipo comercial ni prometer una automatización total. El objetivo es convertir conversaciones desordenadas en pedidos estructurados, confirmados por el cliente y registrados en un sistema operacional. En términos del curso, el proyecto integra diagnóstico del problema, diseño de agente, arquitectura de integración, caso de negocio, gobierno y sustentación ejecutiva. Esa integración es importante porque un agente de IA no es solo un modelo: es un sistema socio-técnico que usa datos, herramientas, reglas, humanos y controles.
-
-La decisión que defiende este artículo es avanzar a un \textbf{piloto controlado}. No se recomienda pasar directamente a producción. El MVP ya demuestra un flujo técnico de punta a punta, pero todavía necesita validación con clientes reales, línea base de métricas, reglas de operación, autenticación, trazabilidad completa y supervisión humana formal. La pregunta ejecutiva no es si la tecnología es interesante, sino si existe suficiente evidencia para probarla de manera acotada y gobernada.
-
-\section{Problema y caso de uso}
-
-El problema correcto no es que las PyMEs carezcan de un canal digital. El canal ya existe: WhatsApp. El problema es que el proceso comercial ocurre sobre mensajes no estructurados. En pedidos personalizados, la operación necesita datos mínimos: producto, cantidad, fecha, dirección, contacto, observaciones y, en algunos casos, una imagen de referencia. Cuando esos datos llegan incompletos, el negocio queda atrapado en ciclos de aclaración, reproceso y decisiones informales.
-
-El proceso actual puede resumirse en cuatro pasos. Primero, el cliente escribe como le resulta natural. Segundo, una persona interpreta el pedido y pregunta lo que falta. Tercero, otra persona u otra área produce con la información disponible. Cuarto, el propietario o encargado absorbe errores, demoras y reclamos. El costo de no actuar no se limita a horas humanas: también incluye ventas perdidas por respuesta lenta, pedidos incompletos, baja trazabilidad y dificultad para medir cuántas conversaciones se convierten realmente en pedidos.
-
-El caso de uso de DeliverAI se centra en una pastelería o negocio similar con pedidos personalizados. Este dominio es apropiado para un piloto porque combina lenguaje natural, imágenes, aclaraciones y datos transaccionales, pero permite acotar el catálogo, los horarios y las reglas. Además, el riesgo puede controlarse: el agente no cobra, no promete entregas fuera de política y no registra pedidos sin confirmación explícita del cliente.
-
-\section{Diagnóstico de intervención}
-
-Una conclusión relevante del diagnóstico es que no todo debe resolverse con IA. Un formulario estructurado reduciría ambigüedad, pero trasladaría fricción al cliente y lo sacaría del canal donde ya compra. Un RPA sería útil si el proceso fuera estable y los datos ya estuvieran organizados, pero aquí el trabajo crítico es interpretar texto libre, mantener contexto, pedir faltantes y producir una salida verificable. Por eso el enfoque de agente es razonable, siempre que se limite su autonomía y se conecte con herramientas transaccionales confiables.
-
-En la definición usada durante el curso, un agente de IA tiene un objetivo, recibe entradas, usa herramientas, produce una salida y decide qué herramienta usar y cuándo. DeliverAI cumple esa definición en el flujo objetivo: interpreta mensajes de WhatsApp, conserva contexto conversacional, solicita información faltante, prepara un resumen y activa herramientas de persistencia solo bajo condiciones. La API, la base de datos y la interfaz administrativa no son decoración técnica; son las barreras determinísticas que convierten una conversación probabilística en un registro verificable.
-
-\section{Solución propuesta y rol del agente}
-
-La solución objetivo se resume así:
-
-\begin{center}
-\texttt{WhatsApp Business -> n8n -> agente conversacional -> API Spring Boot -> PostgreSQL -> Admin UI}
-\end{center}
-
-El agente recibe el mensaje del cliente, identifica intención y entidades, pregunta datos faltantes, procesa o conserva referencias visuales y construye un resumen del pedido. Su acción más sensible es crear un pedido, pero esa acción debe operar como \textbf{A2 bounded}: solo se permite después de validaciones y confirmación explícita. Para todo lo demás, el agente funciona en A0/A1: asiste, redacta, resume o recomienda, pero no toma decisiones irreversibles.
-
-También es clave declarar lo que DeliverAI no hace en v1. No inventa productos ni disponibilidad, no calcula precios finales sin reglas del negocio, no procesa pagos, no promete tiempos de entrega fuera de política, no elimina datos y no resuelve reclamos complejos. Cuando hay ambigüedad, producto no disponible, instrucción riesgosa o fallo de herramienta, el flujo debe escalar o regresar a atención humana.
-
-\section{Arquitectura y MVP técnico}
-
-La arquitectura separa dos mundos. El primero es conversacional y flexible: WhatsApp Business, n8n y el agente LLM. Allí ocurre la interpretación del lenguaje natural. El segundo es transaccional y determinístico: API REST, PostgreSQL y Admin UI. Allí se validan, persisten y operan los pedidos. Esta separación sigue una recomendación común en arquitectura de sistemas con IA: dejar al modelo las tareas de interpretación y explicación, pero reservar el estado de negocio a servicios verificables y auditables~\cite{newman2021,hohpe2003}.
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.25cm and 1.55cm,
-    box/.style={draw, rounded corners, minimum width=2.6cm, minimum height=0.95cm, align=center, font=\small},
-    conv/.style={box, fill=orange!12, draw=orange!60!black},
-    core/.style={box, fill=blue!10, draw=blue!55!black},
-    ops/.style={box, fill=green!10, draw=green!55!black},
-    arrow/.style={-{Latex[length=3mm]}, thick}
-]
-    \node[conv] (wa) {WhatsApp\\Business};
-    \node[conv, right=of wa] (n8n) {n8n\\workflow};
-    \node[conv, right=of n8n] (agent) {Agente LLM\\salida estructurada};
-    \node[core, below=of agent] (api) {Spring Boot API\\validación REST};
-    \node[core, left=of api] (db) {PostgreSQL\\registro operacional};
-    \node[ops, left=of db] (ui) {Admin UI\\React};
-    \node[ops, below=of n8n] (human) {HITL\\operador};
-
-    \draw[arrow] (wa) -- node[above, font=\tiny] {mensaje} (n8n);
-    \draw[arrow] (n8n) -- node[above, font=\tiny] {contexto} (agent);
-    \draw[arrow] (agent) -- node[right, font=\tiny] {pedido confirmado} (api);
-    \draw[arrow] (api) -- node[below, font=\tiny] {persistencia} (db);
-    \draw[arrow] (ui) -- node[above, font=\tiny] {consulta/estado} (db);
-    \draw[arrow] (n8n) -- node[left, font=\tiny] {excepción} (human);
-    \draw[arrow] (human) -- node[below, font=\tiny] {decisión} (n8n);
-\end{tikzpicture}
-\caption{Arquitectura lógica de DeliverAI: conversación probabilística acotada por una capa transaccional y supervisión humana.}
-\label{fig:arquitectura_logica}
-\end{figure}
-
-El repositorio actual contiene un backend Spring Boot 3.4 sobre Java 21, con controladores, servicios, repositorios JPA, DTOs, MapStruct, Swagger/OpenAPI y PostgreSQL. La API expone recursos para usuarios, productos, órdenes y order-items. El modelo de estados de pedido incluye \texttt{IN\_CONFIRMATION}, \texttt{PREPARATION} y \texttt{COMPLETED}. El frontend administrativo está implementado en React, Vite, TypeScript, Tailwind y shadcn/ui, con modo demo y modo API real. La infraestructura del frontend usa S3 privado y CloudFront, mientras que el backend se documenta como desplegado externamente en Azure.
-
-El flujo n8n también está versionado en el repositorio como export JSON. Incluye webhooks de Meta, parseo del mensaje, fallback para audio o tipos no soportados, bienvenida y consentimiento, manejo de imagen de referencia hacia Supabase, agente con modelo LLM, memoria conversacional, parser estructurado, validación, creación de pedido en backend y confirmación o fallback de error. Esta evidencia técnica permite afirmar que existe un prototipo demostrable. Aun así, la clasificación honesta del estado es la de la Tabla~\ref{tab:estado_tecnico}.
-
-\begin{table}[htbp]
-\centering
-\caption{Estado técnico del MVP y condiciones de piloto}
-\label{tab:estado_tecnico}
-\small
-\begin{tabular}{@{}p{3.5cm}p{4.2cm}p{6cm}@{}}
-\toprule
-\textbf{Elemento} & \textbf{Estado} & \textbf{Implicación para el paper} \\ \midrule
-API Spring Boot y PostgreSQL & Implementado y desplegado externamente & Puede defenderse como núcleo transaccional del MVP. \\
-Admin UI React & Implementada, con polling REST cada 10 segundos & Puede defenderse como consola operacional del prototipo. \\
-Workflow n8n y agente & Exportado y ejecutado externamente & Puede mostrarse como demo; requiere hosting gobernado para piloto. \\
-Listado de productos & Gap: no hay \texttt{GET /products} & Condición técnica para catálogo real en piloto. \\
-Asociación pedido-usuario & Gap en DTO de creación de orden & Riesgo técnico que debe cerrarse antes de piloto real. \\
-Autenticación y roles en Admin UI & Pendiente & No debe presentarse como producción segura. \\
-Correlation id y auditoría completa & Pendiente o parcial & Condición de gobierno para operar con clientes reales. \\ \bottomrule
-\end{tabular}
-\end{table}
-
-\section{Valor esperado y métricas}
-
-El KPI principal es la \textbf{conversión de consulta por WhatsApp a pedido confirmado}. Esta métrica conecta el agente con valor de negocio sin caer en una promesa simplista de reducción de personal. Un piloto bien diseñado debe medir el antes y el después, porque hoy el proceso manual no necesariamente tiene línea base. Por eso la primera fase del piloto debe registrar tiempos, conversiones y fallbacks antes de declarar beneficios.
-
-\begin{table}[htbp]
-\centering
-\caption{Métricas propuestas para el piloto controlado}
-\label{tab:metricas}
-\small
-\begin{tabular}{@{}p{4cm}p{6.2cm}p{4cm}@{}}
-\toprule
-\textbf{Métrica} & \textbf{Qué muestra} & \textbf{Uso ejecutivo} \\ \midrule
-Conversión a pedido confirmado & Porcentaje de consultas que terminan en pedido validado & KPI principal de valor. \\
-Tiempo a confirmación & Minutos entre primer mensaje y resumen confirmado & Evalúa velocidad y fricción. \\
-Pedidos incompletos & Casos que llegan a operación con datos faltantes & Mide calidad de captura. \\
-Mensajes de aclaración & Número de preguntas necesarias por pedido & Mide eficiencia conversacional. \\
-Fallback o escalamiento & Casos que el agente no debe resolver solo & Mide riesgo y carga humana. \\
-Errores y reproceso & Pedidos corregidos o retenidos antes de producción & Mide daño operativo evitado. \\ \bottomrule
-\end{tabular}
-\end{table}
-
-El valor esperado no debe expresarse como una cifra inventada. La hipótesis defendible es que DeliverAI puede reducir el tiempo de confirmación, aumentar la proporción de pedidos completos y mejorar la trazabilidad. Si el piloto no muestra mejora frente a la línea base o si la operación humana aumenta por fallbacks excesivos, el proyecto debe ajustarse o detenerse.
-
-\section{Riesgos críticos y controles}
-
-Los riesgos de un agente de pedidos son materiales porque afectan confianza, datos personales y operación. El enfoque de gobierno debe cubrir todo el sistema: modelo, prompts, datos, memoria, herramientas, humanos, monitoreo e incidentes. Esta visión es consistente con marcos actuales de gestión de riesgo de IA, como NIST AI RMF~\cite{nist2023}, y con la idea de que la arquitectura debe documentar decisiones, límites y responsabilidades~\cite{iso42010}.
-
-\begin{table}[htbp]
-\centering
-\caption{Riesgos principales y controles de DeliverAI}
-\label{tab:riesgos}
-\small
-\begin{tabular}{@{}p{3.2cm}p{3.6cm}p{3.6cm}p{3.6cm}@{}}
-\toprule
-\textbf{Riesgo} & \textbf{Preventivo} & \textbf{Detectivo} & \textbf{Correctivo} \\ \midrule
-Pedido incorrecto & Resumen estructurado, campos obligatorios y confirmación explícita & Revisión en estado \texttt{IN\_CONFIRMATION}, monitoreo de rework & Retener pedido, corregir manualmente o cancelar antes de producción. \\
-Exceso de agencia & Tool allowlist, acciones prohibidas y autonomía por acción & Logs de tool calls y alertas por acción fuera de alcance & Pausar workflow y volver a atención manual. \\
-Datos personales expuestos & Minimización, consentimiento y no capturar pagos en v1 & Auditoría de logs y revisión de conversaciones muestreadas & Borrado, bloqueo de acceso e incidente de privacidad. \\
-Pérdida de trazabilidad & Correlation id y registro de entrada, extracción, confirmación y resultado API & Alertas por logs incompletos & Kill trigger: no operar sin evidencia auditable. \\ \bottomrule
-\end{tabular}
-\end{table}
-
-La autonomía debe asignarse por acción. Redactar una respuesta o resumir una conversación puede ser A0/A1. Crear un pedido puede ser A2 bounded solo si existe confirmación explícita y validación de campos. No se recomienda A3 ni A4 en v1. La supervisión humana debe activarse ante ambigüedad, producto no disponible, reclamos, pagos, promesas de entrega riesgosas, instrucciones maliciosas o fallos de API. En términos prácticos, el humano no es un adorno de control: debe tener evidencia, criterio y capacidad de detener o corregir.
-
-\section{Roadmap hacia piloto}
-
-El roadmap debe distinguir cuatro estados. El diseño define problema, arquitectura, límites y gobierno. El prototipo demuestra que el flujo puede funcionar con componentes reales. El piloto prueba valor y control en un negocio acotado. Producción exige seguridad, owners, runbooks, monitoreo, auditoría, acuerdos de soporte y gestión de cambios.
-
-Para entrar al piloto, DeliverAI necesita cerrar condiciones concretas. Primero, estabilizar el hosting del workflow n8n. Segundo, cerrar gaps del backend: listado de productos y asociación clara de usuario con pedido. Tercero, definir autenticación y acceso restringido al panel administrativo. Cuarto, implementar trazabilidad extremo a extremo con correlation id. Quinto, preparar canal HITL con responsables, SLA y criterios de decisión. Sexto, acordar política de datos: qué se guarda, por cuánto tiempo y con qué propósito.
-
-La recomendación ejecutiva es avanzar solo si estas condiciones quedan explícitas. Un piloto responsable puede limitarse a una pastelería, un catálogo reducido, horario definido, métricas pre/post y revisión humana. Pagos en línea, multitenencia, delivery automático, MCP productivo y A2A deben quedar como evolución posterior, no como promesa del piloto.
-
-\section{Aprendizajes del proceso}
-
-El primer aprendizaje es que el diagnóstico precede a la arquitectura. Si el problema se define como ``necesitamos IA'', el proyecto queda sobredimensionado desde el inicio. Si se define como ``convertir conversaciones incompletas en pedidos confirmados y trazables'', entonces cada pieza técnica tiene una razón de existir.
-
-El segundo aprendizaje es separar lenguaje natural de transacción. El agente es útil porque entiende intención y contexto, pero la operación necesita validaciones clásicas, APIs, estados y auditoría. Esta separación reduce el riesgo de confiar demasiado en la salida del modelo.
-
-El tercer aprendizaje es que la gobernanza no debe llegar al final. Los controles de confirmación, límites de autonomía, fallbacks, logs y kill triggers son parte del diseño. En sistemas con agentes, la pregunta no es solo qué puede hacer el sistema, sino qué no se le permite hacer.
-
-El cuarto aprendizaje es de comunicación ejecutiva. Para defender un agente ante un comité, no basta con mostrar tecnología. Hay que pedir una decisión clara, explicar el costo de no actuar, diferenciar prototipo de piloto y producción, presentar métricas y reconocer riesgos sin esconderlos.
-
-\section{Conclusiones}
-
-DeliverAI muestra una oportunidad concreta para aplicar agentes de IA en un contexto empresarial pequeño, cotidiano y medible: la captura de pedidos por WhatsApp. El proyecto tiene un MVP técnico valioso: backend API, base de datos, Admin UI, infraestructura frontend y workflow n8n con agente. También tiene límites que no deben maquillarse: faltan controles de producción, autenticación, trazabilidad completa, cierre de gaps de backend y validación con clientes reales.
-
-Por eso, la conclusión no es ``listo para producción''. La conclusión es que existe evidencia suficiente para avanzar a un piloto controlado, con métricas pre/post, autonomía limitada, supervisión humana y criterios de parada. Si el piloto mejora la conversión a pedidos confirmados, reduce el tiempo de confirmación y mantiene trazabilidad, DeliverAI podrá justificar una siguiente fase. Si no lo logra, el diseño permite ajustar o detener sin comprometer la operación del negocio.
-
-% --- References ---
-\begin{thebibliography}{99}
-
-\bibitem{russell2020}
-S. Russell and P. Norvig, \textit{Artificial Intelligence: A Modern Approach}, 4th ed. Pearson, 2020.
-
-\bibitem{wooldridge2009}
-M. Wooldridge, \textit{An Introduction to MultiAgent Systems}, 2nd ed. Wiley, 2009.
-
-\bibitem{nist2023}
-National Institute of Standards and Technology, \textit{Artificial Intelligence Risk Management Framework (AI RMF 1.0)}, NIST AI 100-1, 2023. [Online]. Available: \url{https://doi.org/10.6028/NIST.AI.100-1}
-
-\bibitem{iso42010}
-ISO/IEC/IEEE, \textit{Systems and software engineering -- Architecture description}, ISO/IEC/IEEE 42010:2011, 2011.
-
-\bibitem{newman2021}
-S. Newman, \textit{Building Microservices}, 2nd ed. O'Reilly Media, 2021.
-
-\bibitem{hohpe2003}
-G. Hohpe and B. Woolf, \textit{Enterprise Integration Patterns}. Addison-Wesley, 2003.
-
-\bibitem{humble2010}
-J. Humble and D. Farley, \textit{Continuous Delivery}. Addison-Wesley, 2010.
-
-\end{thebibliography}
+% =============================================================================
+% PAPER CONTENT
+% Each section is imported separately to keep the paper easy to maintain.
+% =============================================================================
+\input{pages/front-matter.tex}
+\input{pages/01-introduction.tex}
+\input{pages/02-problem-and-use-case.tex}
+\input{pages/03-intervention-diagnosis.tex}
+\input{pages/04-proposed-solution-agent-role.tex}
+\input{pages/05-architecture-and-mvp.tex}
+\input{pages/06-business-value-metrics.tex}
+\input{pages/07-risks-and-controls.tex}
+\input{pages/08-roadmap-to-pilot.tex}
+\input{pages/09-lessons-learned.tex}
+\input{pages/10-conclusions.tex}
+\input{pages/references.tex}
 
 \end{document}
