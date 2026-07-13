@@ -22,9 +22,10 @@ La solución objetivo se resume así:
 \node[conv, right=of b] (c) {Agente\\conversacional};
 \node[core, right=of c] (d) {API\\Spring Boot};
 \node[core, right=of d] (e) {PostgreSQL};
-\node[ops, right=of e] (f) {Admin UI};
+\node[core, right=of e] (f) {SupaBase\\Bucket};
+\node[ops, right=of f] (g) {Admin UI};
 \draw[ar] (a)--(b); \draw[ar] (b)--(c); \draw[ar] (c)--(d);
-\draw[ar] (d)--(e); \draw[ar] (e)--(f);
+\draw[ar] (d)--(e); \draw[ar] (e)--(f); \draw[ar] (f)--(g);
 \end{tikzpicture}
 \end{center}
 
